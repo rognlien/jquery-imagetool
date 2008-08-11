@@ -9,12 +9,6 @@
 	
   <!-- Build -->
   <target name="build">
-  	<jsmin srcfile="src/jquery.imagetool.js" suffix="true" />
+  	<jsmin srcfile="src/jquery.imagetool.js" destdir="build" suffix="true" />
   </target>
-	
-  <!-- Foo -->
-  <target name="foo">
-    <jsmin srcfile="src/jquery.imagetool.js" suffix="true" />
-  </target>
-	
 </project>
