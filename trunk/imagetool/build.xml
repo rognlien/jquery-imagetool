@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<project name="imagetool"  basedir=".">
+  <property name="warfile" value="askari.war"/>
+
+	<taskdef name="jsmin"
+	        classname="net.matthaynes.jsmin.JSMin_Task"
+	        classpath="java/lib/jsmin.0.2.2.jar"/>
+	
+  <!-- Build -->
+  <target name="build">
+  	<jsmin srcfile="src/jquery.imagetool.js" suffix="true" />
+  </target>
+	
+  <!-- Foo -->
+  <target name="foo">
+    <jsmin srcfile="src/jquery.imagetool.js" suffix="true" />
+  </target>
+	
+</project>
