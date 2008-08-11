@@ -1,7 +1,9 @@
 <?xml version="1.0"?>
 
 <project name="imagetool"  basedir=".">
-  <property name="warfile" value="askari.war"/>
+  <property name="version" value="1.0"/>
+	<property name="releasename" value="jquery.imagetool-${version}"/>
+	<property name="filename" value="jquery.imagetool-${version}.js"/>
 
 	<taskdef name="jsmin"
 	        classname="net.matthaynes.jsmin.JSMin_Task"
@@ -9,6 +11,20 @@
 	
   <!-- Build -->
   <target name="build">
-  	<jsmin srcfile="src/jquery.imagetool.js" destdir="build" suffix="true" />
+  	<copy file="src/jquery.imagetool.js" tofile="build/${filename}"/>
+  	<jsmin srcfile="build/${filename}" destdir="build" suffix="true" />
+  </target>
+	
+	<target name="demo">
+	  <replace dir="demo" value="wombat">
+	    <include name="**/*.html"/>
+	    <replacetoken>${script}</replacetoken>
+	  </replace>
+  </target>
+	
+	<target name="clean">
+		<delete includeemptydirs="true">
+		  <fileset dir="build" includes="**/*"/>
+		</delete>
   </target>
 </project>

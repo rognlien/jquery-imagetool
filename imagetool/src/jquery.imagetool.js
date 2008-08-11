@@ -1,4 +1,9 @@
 /**
+ * $Date$
+ * 
+ * Revision: $Revision$
+ * 
+ * 
  * Imagetool
  * 
  * Imagetool is a simple plugin for jQuery providing basic cropping and scaling capabilities for images.
