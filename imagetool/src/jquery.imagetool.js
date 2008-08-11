@@ -233,7 +233,7 @@
        settings.height = settings.height * scaleY;
        
        settings.oldWidth = settings.width;
-       settings.oldHeight = settings.height
+       settings.oldHeight = settings.height;
         
        settings.x = -(settings.topX * scaleX);
        settings.y = -(settings.topY * scaleY);
@@ -312,7 +312,7 @@
           var factor = ( settings.origoY - e.clientY);
           
           settings.oldWidth = settings.width;
-          settings.oldHeight = settings.height
+          settings.oldHeight = settings.height;
           
           settings.width = ((factor/100) * settings.width) + settings.width;
           settings.height = ((factor/100) * settings.height) + settings.height;

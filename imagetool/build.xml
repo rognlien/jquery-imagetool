@@ -9,8 +9,13 @@
 	        classname="net.matthaynes.jsmin.JSMin_Task"
 	        classpath="java/lib/jsmin.0.2.2.jar"/>
 	
+	<taskdef name="jslint"
+	             classname="net.happygiraffe.jslint.ant.JSLintTask"
+	             classpath="java/lib/jslint4java-1.1+rhino.jar" />
+	
   <!-- Build -->
   <target name="build">
+  	<jslint dir="src" excludes="**/*.pack.js" options="undef" />
   	<copy file="src/jquery.imagetool.js" tofile="build/${filename}"/>
   	<jsmin srcfile="build/${filename}" destdir="build" suffix="true" />
   </target>
