@@ -21,7 +21,9 @@
   </target>
 	
 	<target name="demo">
-	  <replace dir="demo" value="wombat">
+		<copy file="src/index.html" todir="demo" />
+
+	  <replace dir="demo" value="${filename}">
 	    <include name="**/*.html"/>
 	    <replacetoken>${script}</replacetoken>
 	  </replace>
