@@ -2,8 +2,10 @@
 
 <project name="imagetool"  basedir=".">
   <property name="version" value="1.0"/>
+	<property name="jquery" value="jquery-1.2.6.min.js"/>
 	<property name="releasename" value="jquery.imagetool-${version}"/>
-	<property name="filename" value="jquery.imagetool-${version}.js"/>
+	<property name="filename" value="${releasename}.js"/>
+	<property name="filenamemin" value="${releasename}.min.js"/>
 
 	<taskdef name="jsmin"
 	        classname="net.matthaynes.jsmin.JSMin_Task"
@@ -17,21 +19,31 @@
   <target name="build">
   	<jslint dir="src" excludes="**/*.pack.js" options="undef" />
   	<copy file="src/jquery.imagetool.js" tofile="build/${filename}"/>
-  	<jsmin srcfile="build/${filename}" destdir="build" suffix="true" />
+  	<jsmin srcfile="build/${filename}" destdir="build" force="true" suffix="true" />
   </target>
 	
+	
+	<!-- Demo -->
 	<target name="demo">
 		<copy file="src/index.html" todir="demo" />
-
+		<copy file="src/image.jpg" todir="demo" />
+		<copy file="build/${filenamemin}" todir="demo" />
+		<copy file="jquery/${jquery}" todir="demo" />
+		
 	  <replace dir="demo" value="${filename}">
 	    <include name="**/*.html"/>
-	    <replacetoken>${script}</replacetoken>
+	  	<replacefilter token="@imagetool" value="${filenamemin}"/>
+	  	<replacefilter token="@jquery" value="${jquery}"/>
 	  </replace>
   </target>
 	
+	<!-- Clean -->
 	<target name="clean">
 		<delete includeemptydirs="true">
 		  <fileset dir="build" includes="**/*"/>
 		</delete>
+    <delete includeemptydirs="true">
+      <fileset dir="demo" includes="**/*"/>
+    </delete>
   </target>
 </project>
