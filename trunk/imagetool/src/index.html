@@ -5,21 +5,91 @@
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 	  <title>Imagetool demo</title>
 	  <meta name="generator" content="BBEdit 8.2" />
-    <script src="jquery/jquery-1.2.6.min.js" type="application/javascript"></script>
-	  <script src="build/${script}" type="application/javascript"></script>
+    <style type="text/css">
+      body {
+        
+      }
+      
+      div.example1, div.example2 {
+        border: 1px solid #333;
+        display: inline;
+      }
+      
+      div p {
+        border: 1px solid #333;
+        background-color: #eee;
+        display: inline;
+      }
+    </style>
+    
+    <script src="@jquery" type="application/javascript"></script>
+	  <script src="@imagetool" type="application/javascript"></script>
     <script type="application/javascript">
       $(function() {
-        $(".imagetool").imagetool({
-          imageWidth: 800
-         ,imageHeight: 533
-         ,viewportWidth: 400
-         ,viewportHeight: 300
+        $(".example1 img").imagetool();
+
+
+        $(".example2 img").imagetool({
+          viewportWidth: 600
+         ,viewportHeight: 250
+         ,topX: 138
+         ,topY: 156
+         ,bottomX: 625
+         ,bottomY: 358
+         ,callback: function(topX, topY, bottomX, bottomY) {     
+            $("input.values").val("(" + topX + "," + topY + ")" + "(" + bottomX + "," + bottomY + ")");
+          }
         });
       });
     </script>
   </head>
   <body>
-    <img class="imagetool" src="image.jpg" />
-  
+    <h1>Imagetool demo</h1>
+    <p>
+    Imagetool is a simple plugin for jQuery providing basic cropping and scaling capabilities for images.
+    </p>
+    
+    <p>
+      Get it from the <a href="http://code.google.com/p/jquery-imagetool/">Googlecode project page</a>
+    </p>
+    
+    <p>Click and drag the image to pan it. Ctrl-click (shift-click on Mac) to zoom.</p>
+    
+    Sample photos by <a href="http://www.flickr.com/people/brentdanley/">brentdanley</a>
+    
+    <h2>Simple - no options</h2>
+    <div class="example1">
+      <img src="image.jpg" />
+
+      <pre><code>$(function() {
+  $(".imagetool").imagetool();
+});</code></pre>
+      
+    </div>
+    
+    <h2>Advanced</h2>
+    <p>Preset visible area, and a custom callback function.</p>
+    
+
+    <div class="example2">
+      <form>
+        <input class="values" type="text" />
+      </form>
+      <img src="image.jpg" />
+<pre><code>$(function() {
+  $(".example2 img").imagetool({
+    viewportWidth: 600
+   ,viewportHeight: 250
+   ,topX: 138
+   ,topY: 156
+   ,bottomX: 625
+   ,bottomY: 358
+   ,callback: function(topX, topY, bottomX, bottomY) {     
+      $("input.values").val("(" + topX + "," + topY + ")" + "(" + bottomX + "," + bottomY + ")");
+    }
+  });
+});</code></pre>
+      
+    </div>
   </body>
 </html>

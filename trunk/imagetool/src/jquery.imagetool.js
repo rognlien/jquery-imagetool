@@ -37,14 +37,9 @@
  *               default: true
  *
  *
- *
- *   imageWidth: (number) The actual width (pixels) of the image used.
- *               required: yes
- *
- *   imageHeight: (number) The actual height (pixels) of the image used.
- *               required: yes
- *
- *
+ *   maxWidth: (number) The maximum width of the zoomed image.
+ *             required: no
+ *             default: 2000
  *
  *   viewportWidth: (number) The width (pixels) of the viewport.
  *                  required: yes
@@ -80,17 +75,13 @@
 
 ;(function($) {
 
-  /*
-  Default settings 
-  */
+  // Default settings   
   var defaultSettings = {
     allowZoom: true
    ,allowPan: true
-   ,imageWidth: 450
-   ,imageHeight: 300
-   ,viewportWidth: 320
-   ,viewportHeight: 180
-   ,imageMaxWidth: 2000
+   ,viewportWidth: 400
+   ,viewportHeight: 300
+   ,maxWidth: 2000
    ,topX: -1
    ,topY: -1
    ,bottomX: -1 
@@ -98,263 +89,266 @@
    ,callback: function(topX, topY, bottomX, bottomY) {}
   };
 
-
-
-  $.fn.extend({
-
-    store: function(settings) {
-      var scale = settings.width / settings.imageWidth;      
-      
-      var dim = {};
-      dim.topX = (-settings.x) / scale;
-      dim.topY = (-settings.y)  / scale;
+  
+  function pan(e) {
+    e.preventDefault();
+    var image = $(this);
+    var dim = image.data("dim");
+    
+    var deltaX = dim.origoX - e.clientX;
+    var deltaY = dim.origoY - e.clientY;
         
-      dim.bottomX = dim.topX + (settings.viewportWidth / scale);
-      dim.bottomY = dim.topY + (settings.viewportHeight / scale);
+    dim.origoX = e.clientX;
+    dim.origoY = e.clientY;
+      
+    var targetX = dim.x - deltaX;
+    var targetY = dim.y - deltaY;
+      
+    var minX = -dim.width + dim.viewportWidth;
+    var minY = -dim.height + dim.viewportHeight;
+      
+    dim.x = targetX;
+    dim.y = targetY;
+    image.move();
+  } // end pan
+  
+  
+  function zoom(e) {
+    e.preventDefault();
+    var image = $(this);
+    var dim = image.data("dim");
+      
+    var factor = ( dim.origoY - e.clientY);
+      
+    dim.oldWidth = dim.width;
+    dim.oldHeight = dim.height;
+      
+    dim.width = ((factor/100) * dim.width) + dim.width;
+    dim.height = ((factor/100) * dim.height) + dim.height;
+      
+    if(image.resize()) {
+      dim.origoY = e.clientY;
+    }
+  } // end zoom
+  
+  function handleMouseDown(mousedownEvent) {
+	  mousedownEvent.preventDefault();
+	  var image = $(this);
+	    var dim = image.data("dim");
+      
+      dim.origoX = mousedownEvent.clientX;
+      dim.origoY = mousedownEvent.clientY;
+      
+      var clickX = (mousedownEvent.pageX - $(this).offset({scroll: false}).left);
+      var clickY = (mousedownEvent.pageY - $(this).offset({scroll: false}).top);
+      
+      
+      if(dim.allowZoom && (mousedownEvent.shiftKey || mousedownEvent.ctrlKey) ) {
+        image.mousemove(zoom);
+      }
+      else if(dim.allowPan) {
+        image.mousemove(pan);
+      }
+      return false;
+    }
+  
+  function disableAndStore() {
+    $(this).unbind("mousemove").store();      
+  }
 
-      if(typeof settings.callback == 'function') {
-        settings.callback(parseInt(dim.topX), parseInt(dim.topY), parseInt(dim.bottomX), parseInt(dim.bottomY));
-      }      
+  
+  
+  
+  $.fn.extend({
+      
+    store: function() {
+      var image = $(this);
+      var dim = image.data("dim");
+      
+      var scale = dim.width / dim.actualWidth;      
+
+      dim.topX = (-dim.x) / scale;
+      dim.topY = (-dim.y)  / scale;
+        
+      dim.bottomX = dim.topX + (dim.viewportWidth / scale);
+      dim.bottomY = dim.topY + (dim.viewportHeight / scale);
+
+      if(typeof dim.callback == 'function') {
+        dim.callback(parseInt(dim.topX), parseInt(dim.topY), parseInt(dim.bottomX), parseInt(dim.bottomY));
+      }
+      return image;
     }
     
     
     
     
-   ,move: function(settings) {    
-      var minX = -settings.width + settings.viewportWidth;
-      var minY = -settings.height + settings.viewportHeight;
+   ,move: function() {
+      var image = $(this);
+      var dim = image.data("dim");
+      var minX = -dim.width + dim.viewportWidth;
+      var minY = -dim.height + dim.viewportHeight;
       
-      if(settings.x > 0) {
-        settings.x = 0;
+      if(dim.x > 0) {
+        dim.x = 0;
       }
-      else if(settings.x < minX) {
-         settings.x = minX;
+      else if(dim.x < minX) {
+         dim.x = minX;
       }
           
-       if(settings.y > 0) {
-         settings.y = 0;
+       if(dim.y > 0) {
+         dim.y = 0;
        }    
-       else if(settings.y < minY) {
-         settings.y = minY;
+       else if(dim.y < minY) {
+         dim.y = minY;
        }
       
        
        $(this).css({
-         left: settings.x + "px"
-        ,top: settings.y + "px"
+         left: dim.x + "px"
+        ,top: dim.y + "px"
        });
+       return image;
      }
     
     
     
     
     
-      ,resize: function(settings) {
+    ,resize: function() {
+      var image = $(this);
+      var dim = image.data("dim");
        // When attempting to scale the image below the minimum, set the size to minimum
        var wasResized = true;
-       if(settings.width < settings.viewportWidth) {
-         settings.height = parseInt(settings.imageHeight * (settings.viewportWidth/settings.imageWidth));
-         settings.width = settings.viewportWidth;
+       if(dim.width < dim.viewportWidth) {
+         dim.height = parseInt(dim.actualHeight * (dim.viewportWidth/dim.actualWidth));
+         dim.width = dim.viewportWidth;
          wasResized = false;
          
        }
        
-       if(settings.height < settings.viewportHeight) {
-         settings.width = parseInt(settings.imageWidth * (settings.viewportHeight/settings.imageHeight));
-         settings.height = settings.viewportHeight;
+       if(dim.height < dim.viewportHeight) {
+         dim.width = parseInt(dim.actualWidth * (dim.viewportHeight/dim.actualHeight));
+         dim.height = dim.viewportHeight;
          wasResized = false;
        }
        
        
-      if(settings.width > settings.imageMaxWidth) {
-         settings.height = parseInt(settings.height * (settings.imageMaxWidth/settings.width));
-         settings.width = settings.imageMaxWidth;
+      if(dim.width > dim.maxWidth) {
+         dim.height = parseInt(dim.height * (dim.maxWidth/dim.width));
+         dim.width = dim.maxWidth;
          wasResized = false;
        }
       
        
        $(this).css({
-         width: settings.width + "px"
-        ,height: settings.height + "px"
+         width: dim.width + "px"
+        ,height: dim.height + "px"
        });
        
        
        // Scale at center of viewport
-       var cx = settings.width /(-settings.x + (settings.viewportWidth/2));
-       var cy = settings.height /(-settings.y + (settings.viewportHeight/2));
+       var cx = dim.width /(-dim.x + (dim.viewportWidth/2));
+       var cy = dim.height /(-dim.y + (dim.viewportHeight/2));
        
      
-       settings.x = settings.x - ((settings.width - settings.oldWidth) / cx);
-       settings.y = settings.y - ((settings.height - settings.oldHeight) / cy);
+       dim.x = dim.x - ((dim.width - dim.oldWidth) / cx);
+       dim.y = dim.y - ((dim.height - dim.oldHeight) / cy);
 
-       $(this).move(settings);
+       $(this).move();
        return wasResized;
      }
-    
 
+     
+    ,setup: function() {
+      var image = $(this);
+      var dim = image.data("dim");
+      
+      dim.actualWidth = image[0].width;
+      dim.actualHeight = image[0].height;
+      
+      dim.width = dim.actualWidth;
+      dim.height = dim.actualHeight;
+      
+     
+     // If no coordinates are set, make sure the image size is not smaller than the viewport
+     if(dim.topX < 0) {
+       dim.topX = 0;
+       dim.topY = 0;
+       
+       if((dim.actualWidth/dim.viewportWidth) > (dim.actualHeight/dim.viewportHeight)) {
+         dim.bottomY = dim.actualHeight;
+         dim.bottomX = dim.viewportWidth * (dim.actualHeight/dim.viewportHeight);
+       }
+       else {
+         dim.bottomX = dim.actualWidth;
+         dim.bottomY = dim.viewportHeight * (dim.actualWidth/dim.viewportWidth);
+       }
+     }
+     
+     
+     
+     
+     var scaleX = dim.viewportWidth/(dim.bottomX - dim.topX);
+     var scaleY = dim.viewportHeight/(dim.bottomY - dim.topY);
+      
+     dim.width = dim.width * scaleX;
+     dim.height = dim.height * scaleY;
+     
+     dim.oldWidth = dim.width;
+     dim.oldHeight = dim.height;
+      
+     dim.x = -(dim.topX * scaleX);
+     dim.y = -(dim.topY * scaleY);
+      
+
+      
+     
+      
+
+      // Set up the viewport        
+      var viewportCss = {
+        backgroundColor: "#fff"
+       ,position: "relative"
+       ,overflow: "hidden"
+       ,width: dim.viewportWidth + "px"
+       ,height: dim.viewportHeight + "px"
+      };
+      var viewportElement = $("<div><\/div>");
+      viewportElement.css(viewportCss);
+
+      image.wrap(viewportElement);
+
+      
+              
+      
+      image.resize();
+      image.store();
+      
+      image.css({
+        position: "relative"
+       ,cursor: "move"
+       ,display: "block"
+      });
+      
+      
+      image.mousedown(handleMouseDown);
+      // When leaving the the element, cancel pan/scale
+      image.mouseup(disableAndStore);
+      image.mouseout(disableAndStore);
+    }
     
     ,imagetool: function(settings) {
-      var foo = $.extend({}, defaultSettings, settings);
-      settings = $.extend({}, defaultSettings, settings);
-      
-      
-      
-      
-      
-      return this.each(function() {  
-        var image = $(this);
-        settings.width = settings.imageWidth;
-        settings.height = settings.imageHeight;
+      return this.each(function() {
+        var image = $(this).css({display: "none"});
         
-        /*
-        If no coordinates are set, make sure the image size is not smaller than the viewport
-        */
-       if(settings.topX < 0) {
-         settings.topX = 0;
-         settings.topY = 0;
-         
-         if((settings.imageWidth/settings.viewportWidth) > (settings.imageHeight/settings.viewportHeight)) {
-           settings.bottomY = settings.imageHeight;
-           settings.bottomX = settings.viewportWidth * (settings.imageHeight/settings.viewportHeight);
-         }
-         else {
-           settings.bottomX= settings.imageWidth;
-           settings.bottomY = settings.viewportHeight * (settings.imageWidth/settings.viewportWidth);
-         }
-       }
-       
-       
-       
-       
-       var scaleX = settings.viewportWidth/(settings.bottomX - settings.topX);
-       var scaleY = settings.viewportHeight/(settings.bottomY - settings.topY);
+        // Add settings to each image object
+        var dim = $.extend({}, defaultSettings, settings);
+        image.data("dim", dim);
         
-       settings.width = settings.width * scaleX;
-       settings.height = settings.height * scaleY;
-       
-       settings.oldWidth = settings.width;
-       settings.oldHeight = settings.height;
-        
-       settings.x = -(settings.topX * scaleX);
-       settings.y = -(settings.topY * scaleY);
-        
-
-        
-        $(this).store(settings);
-        
-
-      
-        /*
-        Set up the viewport
-        */
-        var viewportCss = {
-          backgroundColor: "#fff"
-         ,position: "relative"
-         ,overflow: "hidden"
-         ,width: settings.viewportWidth + "px"
-         ,height: settings.viewportHeight + "px"
-         ,border: "1px solid #333"
-        };
-        var viewportElement = $("<div><\/div>");
-        viewportElement.css(viewportCss);
-
-        image.wrap(viewportElement);
-
-        
-                
-        
-        image.resize(settings);
-        
-        image.css({
-          position: "relative"
-         ,cursor: "move"
-         ,display: "block"
+        image.load(function() {
+        	$(this).setup();
         });
-        
-        
-        
-        
-        image.mouseup(function() {
-          $(this).unbind( "mousemove" );
-          $(this).store(settings);
-        });
-        
-        
-        // When leaving the the element, cancel pan/scale
-        image.mouseout(function() {
-          $(this).unbind( "mousemove" );
-          $(this).store(settings);
-        });
-      
-      
-      
-      image.mousedown(function(mousedownEvent) {
-        mousedownEvent.preventDefault();
-        settings.origoX = mousedownEvent.clientX;
-        settings.origoY = mousedownEvent.clientY;
-        
-        var clickX = (mousedownEvent.pageX - $(this).offset({scroll: false}).left);
-        var clickY = (mousedownEvent.pageY - $(this).offset({scroll: false}).top);
-        
-        
-        if(settings.allowZoom && (mousedownEvent.shiftKey || mousedownEvent.ctrlKey) ) {
-          image.mousemove(zoom);
-        }
-        else if(settings.allowPan) {
-          image.mousemove(pan);
-        }
-
-
-        function zoom(e) {
-          e.preventDefault();
-          var image = $(this);
-          
-          var factor = ( settings.origoY - e.clientY);
-          
-          settings.oldWidth = settings.width;
-          settings.oldHeight = settings.height;
-          
-          settings.width = ((factor/100) * settings.width) + settings.width;
-          settings.height = ((factor/100) * settings.height) + settings.height;
-          
-          if($(this).resize(settings)) {
-            settings.origoY = e.clientY;
-          }
-        } // end scale
-           
-              
-              
-        
-        
-        
-        
-        function pan(e) {
-          e.preventDefault();
-          var image = $(this);
-          var deltaX = settings.origoX - e.clientX;
-          var deltaY = settings.origoY - e.clientY;
-            
-          settings.origoX = e.clientX;
-          settings.origoY = e.clientY;
-          
-          var targetX = settings.x - deltaX;
-          var targetY = settings.y - deltaY;
-          
-          var minX = -settings.width + settings.viewportWidth;
-          var minY = -settings.height + settings.viewportHeight;
-          
-          settings.x = targetX;
-          settings.y = targetY;
-          image.move(settings);
-        } // end pan
-
-        
-        
-        return false;
-      });
-
       }); // end this.each
-    }
-
+    } // End imagetool()
   });
 })(jQuery); 
