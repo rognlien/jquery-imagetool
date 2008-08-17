@@ -7,89 +7,103 @@
 	  <meta name="generator" content="BBEdit 8.2" />
     <style type="text/css">
       body {
-        
+        font-family: Arial, Helvetica;
+        font-size: 0.8em;
       }
       
-      div.example1, div.example2 {
-        border: 1px solid #333;
-        display: inline;
+      p.small {
+        font-size: 0.7em;
       }
       
-      div p {
-        border: 1px solid #333;
-        background-color: #eee;
-        display: inline;
+      h1 {
+        font-size: 1.4em;
+      }
+      
+      h2 {
+        font-size: 1em;
       }
     </style>
     
-    <script src="@jquery" type="application/javascript"></script>
-	  <script src="@imagetool" type="application/javascript"></script>
-    <script type="application/javascript">
+    <script src="@jquery" type="text/javascript"></script>
+	  <script src="@imagetool" type="text/javascript"></script>
+    <script type="text/javascript">
       $(function() {
-        $(".example1 img").imagetool();
-
-
-        $(".example2 img").imagetool({
+        $(".example1 img").imagetool({
           viewportWidth: 600
          ,viewportHeight: 250
-         ,topX: 138
-         ,topY: 156
-         ,bottomX: 625
-         ,bottomY: 358
+         ,topX: 209
+         ,topY: 283
+         ,bottomX: 696
+         ,bottomY: 486
          ,callback: function(topX, topY, bottomX, bottomY) {     
             $("input.values").val("(" + topX + "," + topY + ")" + "(" + bottomX + "," + bottomY + ")");
           }
+         ,loading: "load.gif"
         });
+        $(".example2 img").imagetool();
+
+
+
       });
     </script>
   </head>
   <body>
     <h1>Imagetool demo</h1>
+    <p class="small"><em>Version @version</em></p>
     <p>
     Imagetool is a simple plugin for jQuery providing basic cropping and scaling capabilities for images.
-    </p>
+    <br />
+    Click and drag the image to pan it. Ctrl-click (shift-click on Mac) to zoom.</p>
+    
     
     <p>
       Get it from the <a href="http://code.google.com/p/jquery-imagetool/">Googlecode project page</a>
     </p>
     
-    <p>Click and drag the image to pan it. Ctrl-click (shift-click on Mac) to zoom.</p>
     
-    Sample photos by <a href="http://www.flickr.com/people/brentdanley/">brentdanley</a>
     
-    <h2>Simple - no options</h2>
+    <p class="small">Sample photos by <a href="http://www.flickr.com/people/brentdanley/">brentdanley</a></p>
+    
+    <h2>Example 1</h2>
+    <p>Preset visible area, a custom callback function and a "loading image".</p>
+    
+
     <div class="example1">
-      <img src="image.jpg" />
+      <form action="index.html">
+        <fieldset>
+          <input class="values" type="text" />
+        </fieldset>
+      </form>
+      <img  src="image.jpg" alt="Butterfly" />
+<pre><code>$(function() {
+  $(".example2 img").imagetool({
+    viewportWidth: 600
+   ,viewportHeight: 250
+   ,topX: 209
+   ,topY: 283
+   ,bottomX: 696
+   ,bottomY: 486
+   ,callback: function(topX, topY, bottomX, bottomY) {     
+     $("input.values").val("(" + topX + "," + topY + ")" + "(" + bottomX + "," + bottomY + ")");
+    }
+   ,loading: "load.gif"
+  });
+});</code></pre>
+      
+    </div>
+    
+    <h2>Example 2 - no options</h2>
+    <div class="example2">
+      <img src="image.jpg" alt="Butterfly" />
 
       <pre><code>$(function() {
   $(".imagetool").imagetool();
 });</code></pre>
       
     </div>
-    
-    <h2>Advanced</h2>
-    <p>Preset visible area, and a custom callback function.</p>
-    
 
-    <div class="example2">
-      <form>
-        <input class="values" type="text" />
-      </form>
-      <img src="image.jpg" />
-<pre><code>$(function() {
-  $(".example2 img").imagetool({
-    viewportWidth: 600
-   ,viewportHeight: 250
-   ,topX: 138
-   ,topY: 156
-   ,bottomX: 625
-   ,bottomY: 358
-   ,callback: function(topX, topY, bottomX, bottomY) {     
-      $("input.values").val("(" + topX + "," + topY + ")" + "(" + bottomX + "," + bottomY + ")");
-    }
-  });
-});</code></pre>
-      
-    </div>
+    
+    <p class="small">Copyright 2008 Bendik Rognlien Johansen &lt;bendik.johansen (at) gmail.com&gt;</p>
   </body>
+  
 </html>
