@@ -70,6 +70,10 @@
  *             arguments: topX, topY, bottomX, bottomY
  *             required: no
  *
+ *
+ *   loading: (string) Path to an image that is shown while the main image loads.
+ *             required: no
+ *
 **/
 
 
@@ -258,13 +262,15 @@
        return wasResized;
      }
 
-     
+
+
+
+
     ,setup: function() {
       var image = $(this);
       var dim = image.data("dim");
-      
-      dim.actualWidth = image[0].width;
-      dim.actualHeight = image[0].height;
+      dim.actualWidth = image.width();
+      dim.actualHeight = image.height();
       
       dim.width = dim.actualWidth;
       dim.height = dim.actualHeight;
@@ -299,36 +305,15 @@
       
      dim.x = -(dim.topX * scaleX);
      dim.y = -(dim.topY * scaleY);
-      
 
+     image.resize();
+     image.store();
       
-     
-      
-
-      // Set up the viewport        
-      var viewportCss = {
-        backgroundColor: "#fff"
-       ,position: "relative"
-       ,overflow: "hidden"
-       ,width: dim.viewportWidth + "px"
-       ,height: dim.viewportHeight + "px"
-      };
-      var viewportElement = $("<div><\/div>");
-      viewportElement.css(viewportCss);
-
-      image.wrap(viewportElement);
-
-      
-              
-      
-      image.resize();
-      image.store();
-      
-      image.css({
-        position: "relative"
-       ,cursor: "move"
-       ,display: "block"
-      });
+     image.css({
+       position: "relative"
+      ,cursor: "move"
+      ,display: "block"
+     });
       
       
       image.mousedown(handleMouseDown);
@@ -341,13 +326,39 @@
       return this.each(function() {
         var image = $(this).css({display: "none"});
         
+        
         // Add settings to each image object
         var dim = $.extend({}, defaultSettings, settings);
         image.data("dim", dim);
         
+        // Set up the viewport        
+        var viewportCss = {
+          backgroundColor: "#fff"
+         ,position: "relative"
+         ,overflow: "hidden"
+         ,width: dim.viewportWidth + "px"
+         ,height: dim.viewportHeight + "px"
+        };
+        var viewportElement = $("<div class=\"viewport\"><\/div>");
+        viewportElement.css(viewportCss);
+
+        image.wrap(viewportElement);
+        if(dim.loading) {
+          var loadingCss = {"margin-top": (dim.viewportHeight/2)-8, "margin-left": (dim.viewportWidth/2)-8};
+          $("<img class=\"loading\" src=\"" + dim.loading + "\" />").css(loadingCss).insertAfter(image);
+        }
+        
+        
+          
         image.load(function() {
+        	$(this).next("img").remove();
         	$(this).setup();
+        	
         });
+        
+        if($.browser.msie) {
+          image.attr("src", image.attr("src") + '?' + (Math.round(2048 * Math.random())));
+        }
       }); // end this.each
     } // End imagetool()
   });
