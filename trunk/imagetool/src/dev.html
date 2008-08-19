@@ -10,12 +10,15 @@
     <script type="text/javascript">
       $(function() {
         $("img").imagetool({
-          src: "image.jpg"
-         ,loading: "load.gif"
+          loading: "load.gif"
          ,imageWidth: 800
          ,imageHeight: 533
          ,viewportWidth: 400
          ,viewportHeight: 300
+         
+         ,callback: function(x1, y1, x2, y2) {
+            console.log(x1 +"," + y1 + "," + x2 + "," + y2);
+          }
          
         });
       });
