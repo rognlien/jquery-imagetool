@@ -94,51 +94,13 @@
   };
 
   
-  function pan(e) {
-    e.preventDefault();
-    var image = $(this);
-    var dim = image.data("dim");
-    
-    var deltaX = dim.origoX - e.clientX;
-    var deltaY = dim.origoY - e.clientY;
-        
-    dim.origoX = e.clientX;
-    dim.origoY = e.clientY;
-      
-    var targetX = dim.x - deltaX;
-    var targetY = dim.y - deltaY;
-      
-    var minX = -dim.width + dim.viewportWidth;
-    var minY = -dim.height + dim.viewportHeight;
-      
-    dim.x = targetX;
-    dim.y = targetY;
-    image.move();
-  } // end pan
-  
-  
-  function zoom(e) {
-    e.preventDefault();
-    var image = $(this);
-    var dim = image.data("dim");
-      
-    var factor = ( dim.origoY - e.clientY);
-      
-    dim.oldWidth = dim.width;
-    dim.oldHeight = dim.height;
-      
-    dim.width = ((factor/100) * dim.width) + dim.width;
-    dim.height = ((factor/100) * dim.height) + dim.height;
-      
-    if(image.resize()) {
-      dim.origoY = e.clientY;
-    }
-  } // end zoom
-  
   function handleMouseDown(mousedownEvent) {
 	  mousedownEvent.preventDefault();
 	  var image = $(this);
-	    var dim = image.data("dim");
+	  
+	  // "Add" the image to the document
+	  $(document).data("imagetoolCurrentImage", image);
+	  var dim = image.data("dim");
       
       dim.origoX = mousedownEvent.clientX;
       dim.origoY = mousedownEvent.clientY;
@@ -148,20 +110,22 @@
       
       
       if(dim.allowZoom && (mousedownEvent.shiftKey || mousedownEvent.ctrlKey) ) {
-        image.mousemove(zoom);
+    	  $(window).mousemove(function(e) {
+    		  image.zoom(e);
+    	  });
       }
       else if(dim.allowPan) {
-        image.mousemove(pan);
+    	  $(window).mousemove(function(e) {
+    		  image.pan(e);
+    	  });
       }
+      
+  	  $(window).mouseup(function() {
+		$(this).unbind("mousemove").unbind("mouseup").unbind("mouseout");
+		image.store();
+	  });
       return false;
     }
-  
-  function disableAndStore() {
-    $(this).unbind("mousemove").store();      
-  }
-
-  
-  
   
   $.fn.extend({
       
@@ -183,9 +147,52 @@
       return image;
     }
     
+   ,disableAndStore: function() {
+      $(this).unbind("mousemove").store();      
+    }
+   
+   ,zoom: function(e) {
+	    e.preventDefault();
+	    var image = $(this);
+	    var dim = image.data("dim");
+	      
+	    var factor = ( dim.origoY - e.clientY);
+	      
+	    dim.oldWidth = dim.width;
+	    dim.oldHeight = dim.height;
+	      
+	    dim.width = ((factor/100) * dim.width) + dim.width;
+	    dim.height = ((factor/100) * dim.height) + dim.height;
+	      
+	    if(image.resize()) {
+	      dim.origoY = e.clientY;
+	    }
+	  }
     
-    
-    
+   ,pan: function(e) {
+	    e.preventDefault();
+	    var image = $(this);
+	    var dim = image.data("dim");
+	    
+	    var deltaX = dim.origoX - e.clientX;
+	    var deltaY = dim.origoY - e.clientY;
+	        
+	    dim.origoX = e.clientX;
+	    dim.origoY = e.clientY;
+	      
+	    var targetX = dim.x - deltaX;
+	    var targetY = dim.y - deltaY;
+	      
+	    var minX = -dim.width + dim.viewportWidth;
+	    var minY = -dim.height + dim.viewportHeight;
+	      
+	    dim.x = targetX;
+	    dim.y = targetY;
+	    image.move();
+	  } // end pan
+   
+   
+   
    ,move: function() {
       var image = $(this);
       var dim = image.data("dim");
@@ -318,8 +325,12 @@
       
       image.mousedown(handleMouseDown);
       // When leaving the the element, cancel pan/scale
-      image.mouseup(disableAndStore);
-      image.mouseout(disableAndStore);
+      
+
+      
+
+      //image.mouseup(disableAndStore);
+      //image.mouseout(disableAndStore);
     }
     
     ,imagetool: function(settings) {

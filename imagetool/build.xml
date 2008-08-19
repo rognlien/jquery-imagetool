@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <project name="imagetool"  basedir=".">
-  <property name="version" value="1.1"/>
+  <property name="version" value="1.2"/>
 	<property name="jquery" value="jquery-1.2.6.min.js"/>
 	<property name="releasename" value="jquery.imagetool-${version}"/>
 	<property name="filename" value="${releasename}.js"/>
