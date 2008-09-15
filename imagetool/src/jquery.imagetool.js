@@ -107,6 +107,8 @@
 		var dim = image.data("dim");
 		image.css("cursor", dim.cursor);
 	}
+	
+
 
 	function handleMouseDown(mousedownEvent) {
 		mousedownEvent.preventDefault();
@@ -152,11 +154,13 @@
 			var image = $(this);
 			var dim = image.data("dim");
 			dim.cursor = dim.panCursor; // Default cursor
-			dim.actualWidth = image.width();
-			dim.actualHeight = image.height();
-
-			dim.width = dim.actualWidth;
-			dim.height = dim.actualHeight;
+			
+			/*
+			dim.imageWidth = image.width();
+			dim.imageHeight = image.height();
+      */
+			dim.width = dim.imageWidth;
+			dim.height = dim.imageHeight;
 
 
 			// If no coordinates are set, make sure the image size is not smaller than the viewport
@@ -164,13 +168,13 @@
 				dim.topX = 0;
 				dim.topY = 0;
 
-				if((dim.actualWidth/dim.viewportWidth) > (dim.actualHeight/dim.viewportHeight)) {
-					dim.bottomY = dim.actualHeight;
-					dim.bottomX = dim.viewportWidth * (dim.actualHeight/dim.viewportHeight);
+				if((dim.imageWidth/dim.viewportWidth) > (dim.imageHeight/dim.viewportHeight)) {
+					dim.bottomY = dim.imageHeight;
+					dim.bottomX = dim.viewportWidth * (dim.imageHeight/dim.viewportHeight);
 				}
 				else {
-					dim.bottomX = dim.actualWidth;
-					dim.bottomY = dim.viewportHeight * (dim.actualWidth/dim.viewportWidth);
+					dim.bottomX = dim.imageWidth;
+					dim.bottomY = dim.viewportHeight * (dim.imageWidth/dim.viewportWidth);
 				}
 			}
 
@@ -208,12 +212,7 @@
 	    		e.preventDefault();
 	    	});
 	    }
-			
 
-
-
-			//image.mouseup(disableAndStore);
-			//
 		}
 
 		,imagetool: function(settings) {
@@ -237,22 +236,9 @@
 				viewportElement.css(viewportCss);
 
 				image.wrap(viewportElement);
-				if(dim.loading) {
-					var loadingCss = {"margin-top": (dim.viewportHeight/2)-8, "margin-left": (dim.viewportWidth/2)-8};
-					$("<img class=\"loading\" src=\"" + dim.loading + "\" />").css(loadingCss).insertAfter(image);
-				}
-
-
-
-				image.load(function() {
-					$(this).next("img").remove();
-					$(this).setup();
-
-				});
-
-				if($.browser.msie) {
-					image.attr("src", image.attr("src") + '?' + (Math.round(2048 * Math.random())));
-				}
+				
+				$(this).setup();				
+				
 			}); // end this.each
 		} // End imagetool()
 		
@@ -260,7 +246,7 @@
 		var image = $(this);
 		var dim = image.data("dim");
 
-		var scale = dim.width / dim.actualWidth;      
+		var scale = dim.width / dim.imageWidth;      
 
 		dim.topX = (-dim.x) / scale;
 		dim.topY = (-dim.y)  / scale;
@@ -274,9 +260,6 @@
 		return image;
 	}
 
-	,disableAndStore: function() {
-		$(this).unbind("mousemove").store();      
-	}
 
 	,zoom: function(e) {
 		e.preventDefault();
@@ -358,14 +341,14 @@
 		// When attempting to scale the image below the minimum, set the size to minimum
 		var wasResized = true;
 		if(dim.width < dim.viewportWidth) {
-			dim.height = parseInt(dim.actualHeight * (dim.viewportWidth/dim.actualWidth));
+			dim.height = parseInt(dim.imageHeight * (dim.viewportWidth/dim.imageWidth));
 			dim.width = dim.viewportWidth;
 			wasResized = false;
 
 		}
 
 		if(dim.height < dim.viewportHeight) {
-			dim.width = parseInt(dim.actualWidth * (dim.viewportHeight/dim.actualHeight));
+			dim.width = parseInt(dim.imageWidth * (dim.viewportHeight/dim.imageHeight));
 			dim.height = dim.viewportHeight;
 			wasResized = false;
 		}
