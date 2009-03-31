@@ -65,9 +65,9 @@
  *            required: no
  *            default: 0
  *
- *   
+ *   20090331: Added image as first argument
  *   callback: (function) A function that is called after the image has been panned or zoomed. 
- *             arguments: topX, topY, bottomX, bottomY
+ *             arguments: image, topX, topY, bottomX, bottomY
  *             required: no
  *
  *
@@ -255,7 +255,7 @@
 		dim.bottomY = dim.topY + (dim.viewportHeight / scale);
 
 		if(typeof dim.callback == 'function') {
-			dim.callback(parseInt(dim.topX), parseInt(dim.topY), parseInt(dim.bottomX), parseInt(dim.bottomY));
+			dim.callback(image, parseInt(dim.topX), parseInt(dim.topY), parseInt(dim.bottomX), parseInt(dim.bottomY));
 		}
 		return image;
 	}
