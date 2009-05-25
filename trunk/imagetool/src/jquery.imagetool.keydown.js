@@ -37,11 +37,6 @@
  *               default: true
  *
  *
- *   allowResize:(boolean) If true, the viewport can be resized.
- *               default: true
- *               NOT IMPLEMENTED
- *
- *
  *   maxWidth: (number) The maximum width of the zoomed image.
  *             required: no
  *             default: 2000
@@ -70,9 +65,9 @@
  *            required: no
  *            default: 0
  *
- *   20090331: Added image as first argument
+ *   
  *   callback: (function) A function that is called after the image has been panned or zoomed. 
- *             arguments: image, topX, topY, bottomX, bottomY
+ *             arguments: topX, topY, bottomX, bottomY
  *             required: no
  *
  *
@@ -101,100 +96,10 @@
 		,callback: function(topX, topY, bottomX, bottomY) {}
 	};
   
-	
-	function handleMouseMove(mmevt) {
-		var image = $(this);
-		var dim = image.data("dim");
-		
-		var clickX = (mmevt.pageX - $(this).offset({scroll: false}).left);
-		var clickY = (mmevt.pageY - $(this).offset({scroll: false}).top);
-		
-		var cursors = {se:"se-resize", s:"s-resize", e:"e-resize"};
-		
-		/*
-		console.log(clickX + "x" + clickY);
-		var scale = dim.width / dim.imageWidth;
-		
-		var fromEdgdeN = (clickY) - (dim.topY*scale);
-		var fromEdgdeW = (clickX) - (dim.topX*scale);
-		
-		var fromEdgdeE = dim.viewportWidth - (clickX - (dim.topX*scale));
-		var fromEdgdeS = dim.viewportHeight - (clickY - (dim.topY*scale));
-		*/
-		
-		var edge = getEdge(dim, clickX, clickY);
-		if(edge) {
-			dim.cursor = cursors[edge];
-		}
-		else {
-			dim.cursor = dim.panCursor;
-		}
-		console.log("Edge " + edge);
-		
-		/*
-		// If we are near the edges, show resize
-		if(fromEdgdeE < 10 && fromEdgdeS < 10) {
-			dim.cursor = "se-resize";
-		}
-		else if(fromEdgdeW < 10) {
-			dim.cursor = "w-resize";
-		}
-		else if(fromEdgdeN < 10) {
-			dim.cursor = "n-resize";
-		}
-		else if(fromEdgdeE < 10) {
-			dim.cursor = "e-resize";
-		}
-		else if(fromEdgdeS < 10) {
-			dim.cursor = "s-resize";
-		}
-		else {
-			dim.cursor = dim.panCursor;
-		}
-		*/
-		
-		image.css("cursor", dim.cursor);
-	}
-	
-	/**
-	 * Find the edge n, e, s, w, 
-	 */
-	function getEdge(dim, x, y) {
-		//var dim = image.data("dim");
-		
-		var scale = dim.width / dim.imageWidth;
-		
-		var fromEdgdeN = (y) - (dim.topY*scale);
-		var fromEdgdeW = (x) - (dim.topX*scale);
-		
-		var fromEdgdeE = dim.viewportWidth - (x - (dim.topX*scale));
-		var fromEdgdeS = dim.viewportHeight - (y - (dim.topY*scale));
-
-
-		if(fromEdgdeE < 15 && fromEdgdeS < 15) {
-			return "se";
-		}
-		else if(fromEdgdeW < 10) {
-			return "w";
-		}
-		else if(fromEdgdeN < 10) {
-			return "n";
-		}
-		else if(fromEdgdeE < 10) {
-			return "e";
-		}
-		else if(fromEdgdeS < 10) {
-			return "s";
-		}
-	}
-	
 	function handleMouseOver(event) {
 		var image = $(this);
 		var dim = image.data("dim");
 		image.css("cursor", dim.cursor);
-		
-		$(this).mousemove(handleMouseMove);
-		
 	}
 	
 	function handleMouseOut(event) {
@@ -203,11 +108,62 @@
 		image.css("cursor", dim.cursor);
 	}
 	
+	function handleKeyDown(e) {
+		if(e.which >= 37 && e.which <= 40) {
+			e.preventDefault();
+			console.log("Key pressed: " + e.which);
+			var image = $(document).data("currentImage");
+			var dim = image.data("dim");
 
+			if((e.shiftKey || e.ctrlKey)) {
+			  var factor = 1;
+				switch (e.which) {
+				case 37:
+				case 40:
+					factor = 0.99;	
+					break;
+				case 39:
+				case 38:
+					factor = 1.01;
+					break;
+				}
+				dim.oldWidth = dim.width;
+				dim.oldHeight = dim.height;
+
+				dim.width = ((factor) * dim.width);
+				dim.height = ((factor) * dim.height);
+				image.resize();
+				
+			}
+			else {
+
+				switch (e.which) {
+				case 37:
+					dim.x--;
+					break;
+				case 39:
+					dim.x++;
+					break;
+				case 38:
+					dim.y--;
+					break;
+				case 40:
+					dim.y++;
+					break;
+				}
+
+
+				image.move();
+			}
+		}
+	}
 
 	function handleMouseDown(mousedownEvent) {
 		mousedownEvent.preventDefault();
 		var image = $(this);
+		
+		$(document).data("currentImage", image);
+		
 		var dim = image.data("dim");
 
 		dim.origoX = mousedownEvent.clientX;
@@ -215,17 +171,8 @@
 
 		var clickX = (mousedownEvent.pageX - $(this).offset({scroll: false}).left);
 		var clickY = (mousedownEvent.pageY - $(this).offset({scroll: false}).top);
-		
-		var edge = getEdge(dim, clickX, clickY);
-		
-		if(edge) {
-			if(edge == "se") {
-				$(document).mousemove(function(e) {
-					image.viewPortResize(e);
-				});
-			}
-		}
-		else if(dim.allowZoom && (mousedownEvent.shiftKey || mousedownEvent.ctrlKey) ) {
+
+		if(dim.allowZoom && (mousedownEvent.shiftKey || mousedownEvent.ctrlKey) ) {
 			dim.cursor = dim.zoomCursor;
 			image.css("cursor", dim.zoomCursor);
 			$("body").css("cursor", dim.zoomCursor);
@@ -258,13 +205,11 @@
 			var image = $(this);
 			var dim = image.data("dim");
 			dim.cursor = dim.panCursor; // Default cursor
-			
-			/*
-			dim.imageWidth = image.width();
-			dim.imageHeight = image.height();
-      */
-			dim.width = dim.imageWidth;
-			dim.height = dim.imageHeight;
+			dim.actualWidth = image.width();
+			dim.actualHeight = image.height();
+
+			dim.width = dim.actualWidth;
+			dim.height = dim.actualHeight;
 
 
 			// If no coordinates are set, make sure the image size is not smaller than the viewport
@@ -272,13 +217,13 @@
 				dim.topX = 0;
 				dim.topY = 0;
 
-				if((dim.imageWidth/dim.viewportWidth) > (dim.imageHeight/dim.viewportHeight)) {
-					dim.bottomY = dim.imageHeight;
-					dim.bottomX = dim.viewportWidth * (dim.imageHeight/dim.viewportHeight);
+				if((dim.actualWidth/dim.viewportWidth) > (dim.actualHeight/dim.viewportHeight)) {
+					dim.bottomY = dim.actualHeight;
+					dim.bottomX = dim.viewportWidth * (dim.actualHeight/dim.viewportHeight);
 				}
 				else {
-					dim.bottomX = dim.imageWidth;
-					dim.bottomY = dim.viewportHeight * (dim.imageWidth/dim.viewportWidth);
+					dim.bottomX = dim.actualWidth;
+					dim.bottomY = dim.viewportHeight * (dim.actualWidth/dim.viewportWidth);
 				}
 			}
 
@@ -305,11 +250,16 @@
 				,display: "block"
 			});
 
-			
 	    if(dim.allowPan || dim.allowZoom) {
 	    	image.mousedown(handleMouseDown);
 	    	image.mouseover(handleMouseOver);
 	    	image.mouseout(handleMouseOut);
+	    	image.focus(function() {
+	    		console.log("Image recieved focus.");
+	    		
+	    	});
+	    	
+	    	$(document).keydown(handleKeyDown);
 	    }
 	    else {
 	    	image.css("cursor", dim.disabledCursor);
@@ -341,9 +291,22 @@
 				viewportElement.css(viewportCss);
 
 				image.wrap(viewportElement);
-				
-				$(this).setup();				
-				
+				if(dim.loading) {
+					var loadingCss = {"margin-top": (dim.viewportHeight/2)-8, "margin-left": (dim.viewportWidth/2)-8};
+					$("<img class=\"loading\" src=\"" + dim.loading + "\" />").css(loadingCss).insertAfter(image);
+				}
+
+
+
+				image.load(function() {
+					$(this).next("img").remove();
+					$(this).setup();
+
+				});
+
+				if($.browser.msie) {
+					image.attr("src", image.attr("src") + '?' + (Math.round(2048 * Math.random())));
+				}
 			}); // end this.each
 		} // End imagetool()
 		
@@ -351,7 +314,7 @@
 		var image = $(this);
 		var dim = image.data("dim");
 
-		var scale = dim.width / dim.imageWidth;      
+		var scale = dim.width / dim.actualWidth;      
 
 		dim.topX = (-dim.x) / scale;
 		dim.topY = (-dim.y)  / scale;
@@ -360,34 +323,12 @@
 		dim.bottomY = dim.topY + (dim.viewportHeight / scale);
 
 		if(typeof dim.callback == 'function') {
-			dim.callback(image, parseInt(dim.topX), parseInt(dim.topY), parseInt(dim.bottomX), parseInt(dim.bottomY));
+			dim.callback(parseInt(dim.topX), parseInt(dim.topY), parseInt(dim.bottomX), parseInt(dim.bottomY));
 		}
 		return image;
 	}
 
-	,viewPortResize: function(e) {
-		e.preventDefault();
-		var image = $(this);
-		var dim = image.data("dim");
-		
-		var deltaX = dim.origoX - e.clientX;
-		var deltaY = dim.origoY - e.clientY;
 
-		dim.origoX = e.clientX;
-		dim.origoY = e.clientY;
-
-		var targetX = dim.viewportWidth - deltaX;
-		var targetY = dim.viewportHeight - deltaY;
-		
-		dim.viewportWidth = targetX;
-		dim.viewportHeight = targetY;
-		
-		image.parent().css({
-			width: dim.viewportWidth + "px"
-			,height: dim.viewportHeight + "px"
-		});
-	}
-		
 	,zoom: function(e) {
 		e.preventDefault();
 		var image = $(this);
@@ -468,14 +409,14 @@
 		// When attempting to scale the image below the minimum, set the size to minimum
 		var wasResized = true;
 		if(dim.width < dim.viewportWidth) {
-			dim.height = parseInt(dim.imageHeight * (dim.viewportWidth/dim.imageWidth));
+			dim.height = parseInt(dim.actualHeight * (dim.viewportWidth/dim.actualWidth));
 			dim.width = dim.viewportWidth;
 			wasResized = false;
 
 		}
 
 		if(dim.height < dim.viewportHeight) {
-			dim.width = parseInt(dim.imageWidth * (dim.viewportHeight/dim.imageHeight));
+			dim.width = parseInt(dim.actualWidth * (dim.viewportHeight/dim.actualHeight));
 			dim.height = dim.viewportHeight;
 			wasResized = false;
 		}
