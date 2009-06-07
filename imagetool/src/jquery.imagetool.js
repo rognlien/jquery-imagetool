@@ -111,17 +111,6 @@
 		
 		var cursors = {se:"se-resize", s:"s-resize", e:"e-resize"};
 		
-		/*
-		console.log(clickX + "x" + clickY);
-		var scale = dim.width / dim.imageWidth;
-		
-		var fromEdgdeN = (clickY) - (dim.topY*scale);
-		var fromEdgdeW = (clickX) - (dim.topX*scale);
-		
-		var fromEdgdeE = dim.viewportWidth - (clickX - (dim.topX*scale));
-		var fromEdgdeS = dim.viewportHeight - (clickY - (dim.topY*scale));
-		*/
-		
 		var edge = getEdge(dim, clickX, clickY);
 		if(edge) {
 			dim.cursor = cursors[edge];
@@ -130,28 +119,6 @@
 			dim.cursor = dim.panCursor;
 		}
 		console.log("Edge " + edge);
-		
-		/*
-		// If we are near the edges, show resize
-		if(fromEdgdeE < 10 && fromEdgdeS < 10) {
-			dim.cursor = "se-resize";
-		}
-		else if(fromEdgdeW < 10) {
-			dim.cursor = "w-resize";
-		}
-		else if(fromEdgdeN < 10) {
-			dim.cursor = "n-resize";
-		}
-		else if(fromEdgdeE < 10) {
-			dim.cursor = "e-resize";
-		}
-		else if(fromEdgdeS < 10) {
-			dim.cursor = "s-resize";
-		}
-		else {
-			dim.cursor = dim.panCursor;
-		}
-		*/
 		
 		image.css("cursor", dim.cursor);
 	}
@@ -258,11 +225,7 @@
 			var image = $(this);
 			var dim = image.data("dim");
 			dim.cursor = dim.panCursor; // Default cursor
-			
-			/*
-			dim.imageWidth = image.width();
-			dim.imageHeight = image.height();
-      */
+
 			dim.width = dim.imageWidth;
 			dim.height = dim.imageHeight;
 
@@ -376,11 +339,26 @@
 		dim.origoX = e.clientX;
 		dim.origoY = e.clientY;
 
-		var targetX = dim.viewportWidth - deltaX;
-		var targetY = dim.viewportHeight - deltaY;
+		var targetWidth = dim.viewportWidth - deltaX;
+		var targetHeight = dim.viewportHeight - deltaY;
 		
-		dim.viewportWidth = targetX;
-		dim.viewportHeight = targetY;
+		var mustResize = false;
+		if(targetWidth > dim.width || targetHeight > dim.height) {
+			var factor = targetWidth / dim.width;
+			dim.width = targetWidth;
+			dim.height = dim.height * factor;
+			mustResize = true;
+		}
+		
+		if(mustResize) {
+			if(image.resize()) {
+				dim.origoY = e.clientY;
+			}
+		}
+		
+		
+		dim.viewportWidth = targetWidth;
+		dim.viewportHeight = targetHeight;
 		
 		image.parent().css({
 			width: dim.viewportWidth + "px"
