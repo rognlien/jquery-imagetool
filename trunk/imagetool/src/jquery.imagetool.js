@@ -12,10 +12,10 @@
  *
  * Tested in Safari 3, Firefox 2, MSIE 6, MSIE 7
  * 
- * Version 1.0
- * August 8, 2008
+ * Version 1.5
+ * September 2, 2009
  *
- * Copyright (c) 2008 Bendik Rognlien Johansen
+ * Copyright (c) 2008 - 2009 Bendik Rognlien Johansen
  * 
  * @desc Adds editing capabilities to image (<img>) elements
  * @author Bendik Rognlien Johansen
@@ -37,12 +37,20 @@
  *               default: true
  *
  *
+ *	 @Deprecated
  *   allowResize:(boolean) If true, the viewport can be resized.
  *               default: true
  *               NOT IMPLEMENTED
+
+ *   allowResizeX:(boolean) If true, the viewport can be resized in the x direction.
+ *               default: true
+ *               
+ *   allowResizeY:(boolean) If true, the viewport can be resized in the y direction.
+ *               default: true
+ *               
  *
  *
- *   maxWidth: (number) The maximum width of the zoomed image.
+ *   imageMaxWidth: (number) The maximum width of the zoomed image.
  *             required: no
  *             default: 2000
  *
@@ -88,12 +96,18 @@
 	var defaultSettings = {
 		allowZoom: true
 		,allowPan: true
+		,allowResizeX: true
+		,allowResizeY: true
 		,zoomCursor: "crosshair"
 		,panCursor: "move"
 		,disabledCursor: "not-allowed"
 		,viewportWidth: 400
 		,viewportHeight: 300
-		,maxWidth: 2500
+		,viewportMinWidth: 100
+		,viewportMinHeight: 80
+		,viewportMaxWidth: 800
+		,viewportMaxHeight: 800
+		,imageMaxWidth: 2500
 		,topX: -1
 		,topY: -1
 		,bottomX: -1 
@@ -138,19 +152,19 @@
 		var fromEdgdeS = dim.viewportHeight - (y - (dim.topY*scale));
 
 
-		if(fromEdgdeE < 15 && fromEdgdeS < 15) {
+		if(fromEdgdeE < 15 && fromEdgdeS < 15 && (dim.allowResizeX || dim.allowResizeY)) {
 			return "se";
 		}
-		else if(fromEdgdeW < 10) {
+		else if(fromEdgdeW < 15 && dim.allowResizeX) {
 			return "w";
 		}
-		else if(fromEdgdeN < 10) {
+		else if(fromEdgdeN < 15 && dim.allowResizeY) {
 			return "n";
 		}
-		else if(fromEdgdeE < 10) {
+		else if(fromEdgdeE < 15 && dim.allowResizeX) {
 			return "e";
 		}
-		else if(fromEdgdeS < 10) {
+		else if(fromEdgdeS < 15 && dim.allowResizeY) {
 			return "s";
 		}
 	}
@@ -186,11 +200,11 @@
 		var edge = getEdge(dim, clickX, clickY);
 		
 		if(edge) {
-			if(edge == "se") {
+			/*if(edge == "se") {*/
 				$(document).mousemove(function(e) {
-					image.viewPortResize(e);
+					image.handleViewPortResize(e);
 				});
-			}
+			/*}*/
 		}
 		else if(dim.allowZoom && (mousedownEvent.shiftKey || mousedownEvent.ctrlKey) ) {
 			dim.cursor = dim.zoomCursor;
@@ -328,7 +342,10 @@
 		return image;
 	}
 
-	,viewPortResize: function(e) {
+		/**
+		 * Handles resize of the viewport
+		 */
+	,handleViewPortResize: function(e) {
 		e.preventDefault();
 		var image = $(this);
 		var dim = image.data("dim");
@@ -341,31 +358,91 @@
 
 		var targetWidth = dim.viewportWidth - deltaX;
 		var targetHeight = dim.viewportHeight - deltaY;
-		
-		var mustResize = false;
-		if(targetWidth > dim.width || targetHeight > dim.height) {
-			var factor = targetWidth / dim.width;
-			dim.width = targetWidth;
-			dim.height = dim.height * factor;
-			mustResize = true;
+
+		if(targetWidth > dim.viewportMaxWidth) {
+			dim.viewportWidth = dim.viewportMaxWidth;
+		}
+		else if(targetWidth < dim.viewportMinWidth) {
+			dim.viewportWidth = dim.viewportMinWidth;
+		}
+		else if(dim.allowResizeX) {
+			dim.viewportWidth = targetWidth;
 		}
 		
-		if(mustResize) {
-			if(image.resize()) {
-				dim.origoY = e.clientY;
-			}
+		if(targetHeight > dim.viewportMaxHeight) {
+			dim.viewportHeight = dim.viewportMaxHeight;
+		}
+		else if(targetHeight < dim.viewportMinHeight) {
+			dim.viewportHeight = dim.viewportMinHeight;
+		}
+		else if(dim.allowResizeY) {
+			dim.viewportHeight = targetHeight;
 		}
 		
-		
-		dim.viewportWidth = targetWidth;
-		dim.viewportHeight = targetHeight;
-		
+
 		image.parent().css({
 			width: dim.viewportWidth + "px"
 			,height: dim.viewportHeight + "px"
 		});
-	}
 		
+		image.fit(e);
+		
+	}
+	
+	,viewportResize: function(width, height) {
+		var image = $(this);
+		var dim = image.data("dim");
+		dim.viewportWidth = width;
+		dim.viewportHeight = height;
+		image.parent().css({
+			width: dim.viewportWidth + "px"
+			,height: dim.viewportHeight + "px"
+		});
+		
+		image.fit();
+	}
+	
+	
+	,fit: function() {
+		var image = $(this);
+		var dim = image.data("dim");
+		if(dim.viewportWidth > dim.width || dim.viewportHeight > dim.height) {
+			var factor = dim.viewportWidth / dim.width;
+			dim.width = dim.viewportWidth;
+			dim.height = dim.height * factor;
+			if(image.resize()) {
+				//dim.origoY = e.clientY;
+			}
+		}
+		/*
+		var cx = dim.width /(-dim.x + (dim.viewportWidth/2));
+		var cy = dim.height /(-dim.y + (dim.viewportHeight/2));
+
+
+		dim.x = dim.x - ((dim.width - dim.oldWidth) / cx);
+		dim.y = dim.y - ((dim.height - dim.oldHeight) / cy);
+		*/
+		$(this).move();
+	}
+
+	/**
+	 * Makes sure the images hugs the edges of the viewport.
+	 */
+	,hug: function() {
+		var image = $(this);
+		var dim = image.data("dim");
+		
+		
+		
+		var cx = dim.width /(-dim.x + (dim.viewportWidth/2));
+		var cy = dim.height /(-dim.y + (dim.viewportHeight/2));
+
+
+		dim.x = dim.x - ((dim.width - dim.oldWidth) / cx);
+		dim.y = dim.y - ((dim.height - dim.oldHeight) / cy);
+
+		$(this).move();
+	}
 	,zoom: function(e) {
 		e.preventDefault();
 		var image = $(this);
@@ -459,9 +536,9 @@
 		}
 
 
-		if(dim.width > dim.maxWidth) {
-			dim.height = parseInt(dim.height * (dim.maxWidth/dim.width));
-			dim.width = dim.maxWidth;
+		if(dim.width > dim.imageMaxWidth) {
+			dim.height = parseInt(dim.height * (dim.imageMaxWidth/dim.width));
+			dim.width = dim.imageMaxWidth;
 			wasResized = false;
 		}
 
