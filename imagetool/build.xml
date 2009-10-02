@@ -3,7 +3,7 @@
 <project name="imagetool"  basedir=".">
   <property name="version" value="1.5"/>
 	<property name="jquery" value="jquery-1.3.2.min.js"/>
-	<property name="releasename" value="jquery.imagetool-${version}"/>
+	<property name="releasename" value="jquery.ui.imagetool-${version}"/>
 	<property name="filename" value="${releasename}.js"/>
 	<property name="filenamemin" value="${releasename}.min.js"/>
 
@@ -18,7 +18,7 @@
   <!-- Build -->
   <target name="build">
   	<jslint dir="src" excludes="**/*.pack.js" options="undef" />
-  	<copy file="src/jquery.imagetool.js" tofile="build/${filename}"/>
+  	<copy file="src/jquery.ui.imagetool.js" tofile="build/${filename}"/>
   	<jsmin srcfile="build/${filename}" destdir="build" force="true" suffix="true" />
   </target>
 	
@@ -36,6 +36,7 @@
 	  	<replacefilter token="@imagetool" value="${filenamemin}"/>
 	  	<replacefilter token="@jquery" value="${jquery}"/>
 	  	<replacefilter token="@version" value="${version}"/>
+	  	<replacefilter token="@VERSION" value="${version}"/>
 	  </replace>
   </target>
 	
