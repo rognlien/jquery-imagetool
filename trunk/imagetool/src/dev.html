@@ -31,7 +31,9 @@
         });
 
         $("input[name=preview]").click(function() {
-        	alert($("img.a").imagetool("option", "imageWidth"));
+
+        	$("img.a").imagetool('update', {src:'iphone.jpg', width: 600, height: 800});
+        	//alert($("img.a").imagetool("option", "imageWidth"));
         });
         
 
@@ -49,8 +51,8 @@
   </head>
   <body>
   	<img class="a" src="plane.jpg" />
-    <img class="a" src="plane.jpg" />
-    <input type="button" name="preview" value="Preview"/>
+    <img class="b" src="plane.jpg" />
+    <input type="button" name="preview" value="Swap"/>
     
     <!-- 
     <img class="a" src="http://homepage.mac.com/bendik/imagetool/demo/image.jpg" />
