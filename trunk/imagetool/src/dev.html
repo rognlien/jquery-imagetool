@@ -31,12 +31,24 @@
         });
 
         $("input[name=preview]").click(function() {
-
-        	$("img.a").imagetool('update', {src:'iphone.jpg', width: 600, height: 800});
+        	//$("img.a").imagetool('option', 'src', 'portrait.jpg');
+        	//$("img.a").imagetool('update', {src:'portrait.jpg', imageWidth: 750, imageHeight: 1000});
+        	$("img.a").imagetool('update', {src:'grid.png', imageWidth: 500, imageHeight: 500});
         	//alert($("img.a").imagetool("option", "imageWidth"));
         });
-        
 
+        $("input[name=move]").click(function() {
+        	$("img.a").imagetool('option', 'x', 0.04);
+        	$("img.a").imagetool('option', 'y', 0.04);
+        	//alert($("img.a").imagetool("option", "imageWidth"));
+        });
+
+        $("input[name=data]").click(function() {
+        	var dim = $("img.a").imagetool('dimensions');
+        	console.dir(dim);
+        });
+
+        /*
         $("img.b").imagetool({
           loading: "load.gif"
           	,allowZoom: false
@@ -46,13 +58,16 @@
          ,viewportWidth: 400
          ,viewportHeight: 300
         });
+        */
       });
     </script>
   </head>
   <body>
   	<img class="a" src="plane.jpg" />
-    <img class="b" src="plane.jpg" />
+    
     <input type="button" name="preview" value="Swap"/>
+    <input type="button" name="data" value="Data"/>
+    <input type="button" name="move" value="Move"/>
     
     <!-- 
     <img class="a" src="http://homepage.mac.com/bendik/imagetool/demo/image.jpg" />
