@@ -13,13 +13,17 @@
 			if(args.width) {
 				image.attr("width", args.width);
 				o.imageWidth = args.width;
+				o.width = args.width;
 				console.log("updating width: " + args.width);
 			}
 			if(args.height) {
 				image.attr("height", args.height);
 				o.imageHeight = args.height;
+				o.height = args.height;
 				console.log("updating height: " + args.height);
 			}
+			
+			this._resize();
 			
 		}
 	
