@@ -1,7 +1,45 @@
 (function($) {
 	$.widget("ui.imagetool", {
+		/**
+		 * Public methods
+		 */
+		update: function(args) {
+			var image = this.element;
+			var o = this.options;
+			if(args.src) {
+				image.attr("src", args.src);
+				console.log("updating src: " + args.src);
+			}
+			if(args.width) {
+				image.attr("width", args.width);
+				o.imageWidth = args.width;
+				console.log("updating width: " + args.width);
+			}
+			if(args.height) {
+				image.attr("height", args.height);
+				o.imageHeight = args.height;
+				console.log("updating height: " + args.height);
+			}
+			
+		}
+	
+	
+	
+	/*
+		,setData: function(key, value) {
+			console.log("Setting option: " + key);
+			var image = this.element;
+			if(key == 'src') {
+				
+				image.attr("src", value);
+			}
+			else {
+				self._setData(key, value);
+			}
+	  }
+	*/
 		
-		_init: function() {
+		,_init: function() {
 			console.log("imagetool init");
 			var self = this;
 			var o = this.options;
@@ -416,7 +454,8 @@
 	$.extend($.ui.imagetool, {
 		version: "@VERSION",
 		defaults: {
-			allowZoom: true
+			src: null /* The image src is used */
+			,allowZoom: true
 			,allowPan: true
 			,allowResizeX: true
 			,allowResizeY: true
@@ -436,7 +475,8 @@
 			,"cursor-s":"s-resize"
 			,"cursor-e":"e-resize"
 			,"edgeSensitivity": 15
-				
+			,imageWidth: 200
+      ,imageHeight: 200
 			,imageMaxWidth: 2500
 			,topX: -1
 			,topY: -1

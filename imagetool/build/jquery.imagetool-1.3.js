@@ -12,10 +12,10 @@
  *
  * Tested in Safari 3, Firefox 2, MSIE 6, MSIE 7
  * 
- * Version 1.0
- * August 8, 2008
+ * Version 1.5
+ * September 2, 2009
  *
- * Copyright (c) 2008 Bendik Rognlien Johansen
+ * Copyright (c) 2008 - 2009 Bendik Rognlien Johansen
  * 
  * @desc Adds editing capabilities to image (<img>) elements
  * @author Bendik Rognlien Johansen
@@ -37,7 +37,12 @@
  *               default: true
  *
  *
- *   maxWidth: (number) The maximum width of the zoomed image.
+ *   allowResize:(boolean) If true, the viewport can be resized.
+ *               default: true
+ *               NOT IMPLEMENTED
+ *
+ *
+ *   imageMaxWidth: (number) The maximum width of the zoomed image.
  *             required: no
  *             default: 2000
  *
@@ -65,9 +70,9 @@
  *            required: no
  *            default: 0
  *
- *   
+ *   20090331: Added image as first argument
  *   callback: (function) A function that is called after the image has been panned or zoomed. 
- *             arguments: topX, topY, bottomX, bottomY
+ *             arguments: image, topX, topY, bottomX, bottomY
  *             required: no
  *
  *
@@ -88,7 +93,11 @@
 		,disabledCursor: "not-allowed"
 		,viewportWidth: 400
 		,viewportHeight: 300
-		,maxWidth: 2500
+		,viewportMinWidth: 100
+		,viewportMinHeight: 80
+		,viewportMaxWidth: 800
+		,viewportMaxHeight: 800
+		,imageMaxWidth: 2500
 		,topX: -1
 		,topY: -1
 		,bottomX: -1 
@@ -96,10 +105,67 @@
 		,callback: function(topX, topY, bottomX, bottomY) {}
 	};
   
+	
+	function handleMouseMove(mmevt) {
+		var image = $(this);
+		var dim = image.data("dim");
+		
+		var clickX = (mmevt.pageX - $(this).offset({scroll: false}).left);
+		var clickY = (mmevt.pageY - $(this).offset({scroll: false}).top);
+		
+		var cursors = {se:"se-resize", s:"s-resize", e:"e-resize"};
+		
+		var edge = getEdge(dim, clickX, clickY);
+		if(edge) {
+			dim.cursor = cursors[edge];
+		}
+		else {
+			dim.cursor = dim.panCursor;
+		}
+		console.log("Edge " + edge);
+		
+		image.css("cursor", dim.cursor);
+	}
+	
+	/**
+	 * Find the edge n, e, s, w, 
+	 */
+	function getEdge(dim, x, y) {
+		//var dim = image.data("dim");
+		
+		var scale = dim.width / dim.imageWidth;
+		
+		var fromEdgdeN = (y) - (dim.topY*scale);
+		var fromEdgdeW = (x) - (dim.topX*scale);
+		
+		var fromEdgdeE = dim.viewportWidth - (x - (dim.topX*scale));
+		var fromEdgdeS = dim.viewportHeight - (y - (dim.topY*scale));
+
+
+		if(fromEdgdeE < 15 && fromEdgdeS < 15) {
+			return "se";
+		}
+		else if(fromEdgdeW < 10) {
+			return "w";
+		}
+		else if(fromEdgdeN < 10) {
+			return "n";
+		}
+		else if(fromEdgdeE < 10) {
+			return "e";
+		}
+		else if(fromEdgdeS < 10) {
+			return "s";
+		}
+	}
+	
 	function handleMouseOver(event) {
 		var image = $(this);
 		var dim = image.data("dim");
 		image.css("cursor", dim.cursor);
+		
+		$(this).mousemove(handleMouseMove);
+		
 	}
 	
 	function handleMouseOut(event) {
@@ -120,8 +186,17 @@
 
 		var clickX = (mousedownEvent.pageX - $(this).offset({scroll: false}).left);
 		var clickY = (mousedownEvent.pageY - $(this).offset({scroll: false}).top);
-
-		if(dim.allowZoom && (mousedownEvent.shiftKey || mousedownEvent.ctrlKey) ) {
+		
+		var edge = getEdge(dim, clickX, clickY);
+		
+		if(edge) {
+			if(edge == "se") {
+				$(document).mousemove(function(e) {
+					image.handleViewPortResize(e);
+				});
+			}
+		}
+		else if(dim.allowZoom && (mousedownEvent.shiftKey || mousedownEvent.ctrlKey) ) {
 			dim.cursor = dim.zoomCursor;
 			image.css("cursor", dim.zoomCursor);
 			$("body").css("cursor", dim.zoomCursor);
@@ -154,11 +229,7 @@
 			var image = $(this);
 			var dim = image.data("dim");
 			dim.cursor = dim.panCursor; // Default cursor
-			
-			/*
-			dim.imageWidth = image.width();
-			dim.imageHeight = image.height();
-      */
+
 			dim.width = dim.imageWidth;
 			dim.height = dim.imageHeight;
 
@@ -201,6 +272,7 @@
 				,display: "block"
 			});
 
+			
 	    if(dim.allowPan || dim.allowZoom) {
 	    	image.mousedown(handleMouseDown);
 	    	image.mouseover(handleMouseOver);
@@ -231,6 +303,7 @@
 					,overflow: "hidden"
 					,width: dim.viewportWidth + "px"
 					,height: dim.viewportHeight + "px"
+					,border: "1px solid red"
 				};
 				var viewportElement = $("<div class=\"viewport\"><\/div>");
 				viewportElement.css(viewportCss);
@@ -260,7 +333,47 @@
 		return image;
 	}
 
+		/**
+		 * Handles resize of the viewport
+		 */
+	,handleViewPortResize: function(e) {
+		e.preventDefault();
+		var image = $(this);
+		var dim = image.data("dim");
+		
+		var deltaX = dim.origoX - e.clientX;
+		var deltaY = dim.origoY - e.clientY;
 
+		dim.origoX = e.clientX;
+		dim.origoY = e.clientY;
+
+		var targetWidth = dim.viewportWidth - deltaX;
+		var targetHeight = dim.viewportHeight - deltaY;
+		
+		var mustResize = false;
+		if(targetWidth > dim.width || targetHeight > dim.height) {
+			var factor = targetWidth / dim.width;
+			dim.width = targetWidth;
+			dim.height = dim.height * factor;
+			mustResize = true;
+		}
+		
+		if(mustResize) {
+			if(image.resize()) {
+				dim.origoY = e.clientY;
+			}
+		}
+		image.hug();
+		
+		dim.viewportWidth = targetWidth;
+		dim.viewportHeight = targetHeight;
+		
+		image.parent().css({
+			width: dim.viewportWidth + "px"
+			,height: dim.viewportHeight + "px"
+		});
+	}
+		
 	,zoom: function(e) {
 		e.preventDefault();
 		var image = $(this);
@@ -332,6 +445,21 @@
 	}
 
 
+	/**
+	 * Makes sure the images hugs the edges of the viewport.
+	 */
+	,hug: function() {
+		var image = $(this);
+		var dim = image.data("dim");
+		var cx = dim.width /(-dim.x + (dim.viewportWidth/2));
+		var cy = dim.height /(-dim.y + (dim.viewportHeight/2));
+
+
+		dim.x = dim.x - ((dim.width - dim.oldWidth) / cx);
+		dim.y = dim.y - ((dim.height - dim.oldHeight) / cy);
+
+		$(this).move();
+	}
 
 
 
@@ -354,9 +482,9 @@
 		}
 
 
-		if(dim.width > dim.maxWidth) {
-			dim.height = parseInt(dim.height * (dim.maxWidth/dim.width));
-			dim.width = dim.maxWidth;
+		if(dim.width > dim.imageMaxWidth) {
+			dim.height = parseInt(dim.height * (dim.imageMaxWidth/dim.width));
+			dim.width = dim.imageMaxWidth;
 			wasResized = false;
 		}
 
