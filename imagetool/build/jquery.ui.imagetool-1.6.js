@@ -1,19 +1,13 @@
 (function($) {
-	
-	
 	$.widget("ui.imagetool", {
 
 	_init: function() {
 		console.log("imagetool init");
 		var self = this;
 		var o = this.options;
-
 		var image = this.element;
-		
 		image.css("display", "none");
-		if(o.src) {
-			image.attr("src", o.src);
-		}
+
 
 		// Set up the viewport        
 		var viewportCss = {
@@ -419,8 +413,8 @@
 			,"cursor-s":"s-resize"
 			,"cursor-e":"e-resize"
 			,edgeSensitivity: 15
-			,imageWidth: 200 /* The width of the work image */
-			,imageHeight: 200 /* The height of the work image */
+			,imageWidth: 200
+			,imageHeight: 200
 			,imageMaxWidth: 2500
 			,x: 0
 			,y: 0
