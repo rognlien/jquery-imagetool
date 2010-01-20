@@ -23,11 +23,8 @@
           $(this).imagetool(settings);
           });
 
-        $("input[name=preview]").click(function() {
-        	//$("img.a").imagetool('option', 'src', 'portrait.jpg');
-        	//$("img.a").imagetool('update', {src:'portrait.jpg', imageWidth: 750, imageHeight: 1000});
-        	$("img.a").imagetool('update', {src:'grid.png', imageWidth: 1000, imageHeight: 1000});
-        	//alert($("img.a").imagetool("option", "imageWidth"));
+        $("input[name=reset]").click(function() {
+        	$("img.a").imagetool('reset', {src:'portrait.jpg', imageWidth: 750, imageHeight: 1000, viewportWidth: 600,x: 0, y: 0.33375, w: 1, h: 0.5});
         });
 
         $("input[name=move]").click(function() {
@@ -59,7 +56,7 @@
   <body>
   	<img class="a {src: 'grid.png',imageWidth: 1000,imageHeight: 1000,viewportWidth: 400,viewportHeight: 400,x: 0.4004292783338513,y: 0.3006338195590597,w: 0.498977293873958,h: 0.3742329704054685}" src="image.jpg" />
     
-    <input type="button" name="preview" value="Swap"/>
+    <input type="button" name="reset" value="Reset"/>
     <input type="button" name="data" value="Data"/>
     <input type="button" name="move" value="Move"/>
     <br />

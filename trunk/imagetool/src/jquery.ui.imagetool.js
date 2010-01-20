@@ -1,9 +1,18 @@
 (function($) {
-	
-	
 	$.widget("ui.imagetool", {
-
-	_init: function() {
+		/**
+		 * Public methods
+		 */
+		reset: function(options) {
+			$.extend(this.options, options);
+			this._setup();
+		}
+		
+	/**
+	 * Private methods
+	 */
+		
+	,_init: function() {
 		console.log("imagetool init");
 		var self = this;
 		var o = this.options;
@@ -11,25 +20,30 @@
 		var image = this.element;
 		
 		image.css("display", "none");
+
+
+		// Set up the viewport
+		image.wrap("<div/>");
+
+		self._setup();
+
+		image.css({position: "relative", display: "block"});
+	}
+	
+
+	,_setup: function() {
+		var self = this;
+		var o = this.options;
+		var image = this.element;
 		if(o.src) {
 			image.attr("src", o.src);
 		}
-
-		// Set up the viewport        
-		var viewportCss = {
-				backgroundColor: "#fff"
-					,position: "relative"
-						,overflow: "hidden"
-							,width: o.viewportWidth + "px"
-							,height: o.viewportHeight + "px"
-		};
-
-		image.wrap("<div/>");
-
 		var viewport = image.closest("div");
-
-		viewport.css(viewportCss);
-
+		viewport.css({
+			overflow: "hidden"
+			,width: o.viewportWidth + "px"
+			,height: o.viewportHeight + "px"
+		});
 		// Set the initial size of the image to the original size.
 		o._width = o.imageWidth;
 		o._height = o.imageHeight;
@@ -50,11 +64,7 @@
 		o._absy = -(o.y * o._height);
 
 		self._zoom();
-
-		image.css({
-			position: "relative"
-				,display: "block"
-		});
+		
 
 		if(o.allowPan || o.allowZoom) {
 			viewport.mousedown(function(e) {self._handleMouseDown(e);});
@@ -68,7 +78,7 @@
 			});
 		}
 	}
-
+	
 	/**
 	 * Find the edge n, e, s, w, 
 	 */
