@@ -7,13 +7,19 @@
 			$.extend(this.options, options);
 			this._setup();
 		}
+	
+			/**
+			 * Returns all options
+			 */
+		,properties: function() {
+			return this.options;
+		}
 		
 	/**
 	 * Private methods
 	 */
 		
 	,_init: function() {
-		console.log("imagetool init");
 		var self = this;
 		var o = this.options;
 
@@ -28,6 +34,7 @@
 		self._setup();
 
 		image.css({position: "relative", display: "block"});
+		this._trigger("ready", null, o);
 	}
 	
 
@@ -39,8 +46,10 @@
 			image.attr("src", o.src);
 		}
 		var viewport = image.closest("div");
+
 		viewport.css({
 			overflow: "hidden"
+			,position: "relative" /* Needed by IE for some reason */
 			,width: o.viewportWidth + "px"
 			,height: o.viewportHeight + "px"
 		});
@@ -108,9 +117,9 @@
 		var self = this;
 		var o = this.options;
 		var image = this.element;
-		var viewport = image.parent();		
+		var viewport = image.parent();
 		viewport.css("cursor", o.cursor);		
-		viewport.mousemove(function(e) {self._handleMouseMove(e);});
+		viewport.mousemove(function() {self._handleMouseMove(event);});
 
 	}
 	/**
@@ -123,14 +132,17 @@
 	}
 
 	,_handleMouseMove: 	function(mmevt) {
+		
 		var self = this;
 		var o = this.options;
 		var image = this.element;
 		var viewport = image.parent();
 
-		var mouseX = (mmevt.pageX - viewport.offset({scroll: false}).left);
-		var mouseY = (mmevt.pageY - viewport.offset({scroll: false}).top);
+		
+		var mouseX = (mmevt.pageX - viewport.offset().left);
+		var mouseY = (mmevt.pageY - viewport.offset().top);
 
+		
 		var edge = self._getEdge(o, mouseX, mouseY);
 		if(edge) {
 			o.cursor = o["cursor-" + edge];
@@ -138,6 +150,7 @@
 		else {
 			o.cursor = o.panCursor;
 		}
+		
 
 		image.css("cursor", o.cursor);
 	}
@@ -153,8 +166,8 @@
 		o.origoX = mousedownEvent.clientX;
 		o.origoY = mousedownEvent.clientY;
 
-		var mouseX = (mousedownEvent.pageX - viewport.offset({scroll: false}).left);
-		var mouseY = (mousedownEvent.pageY - viewport.offset({scroll: false}).top);
+		var mouseX = (mousedownEvent.pageX - viewport.offset().left);
+		var mouseY = (mousedownEvent.pageY - viewport.offset().top);
 
 		var edge = self._getEdge(o, mouseX, mouseY);
 
@@ -407,7 +420,7 @@
 	}
 });
 
-	$.ui.imagetool.getter = "dimensions";
+	$.ui.imagetool.getter = "properties";
 	$.extend($.ui.imagetool, {
 		version: "@VERSION",
 		defaults: {
@@ -436,9 +449,8 @@
 			,y: 0
 			,w: 1 
 			,h: 1
-			,change: function() {
-				console.log("Image changed");
-	}
+			,ready: function() {}
+			,change: function() {}
 		}
 	});
 })(jQuery);
