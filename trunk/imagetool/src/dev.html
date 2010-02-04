@@ -17,7 +17,8 @@
             allowResizeX: false
            ,allowResizeY: false
            ,ready: function() {
-          	$(this).imagetool('reset', {src:'portrait.jpg', imageWidth: 750, imageHeight: 1000, viewportWidth: 600,x: 0, y: 0.33375, w: 1, h: 0.5});
+            alert("ready");
+          	//$(this).imagetool('reset', {src:'portrait.jpg', imageWidth: 750, imageHeight: 1000, viewportWidth: 600,x: 0, y: 0.33375, w: 1, h: 0.5});
             }
            ,change: function(event, dim) {
              $("input[name=dimensions]").val("x: " + dim.x + ", y: " + dim.y + ", w: " + dim.w + ", h: " + dim.h);
@@ -27,7 +28,7 @@
           });
 
         $("input[name=reset]").click(function() {
-        	$("img.a").imagetool('reset', {src:'portrait.jpg', imageWidth: 750, imageHeight: 1000, viewportWidth: 600,x: 0, y: 0.33375, w: 1, h: 0.5});
+        	$("img.a").imagetool('reset', {src:'portrait.jpg', viewportWidth: 600,x: 0, y: 0.33375, w: 1, h: 0.5});
         });
 
         $("input[name=move]").click(function() {
