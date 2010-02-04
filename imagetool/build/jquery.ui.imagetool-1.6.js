@@ -1,29 +1,73 @@
 (function($) {
 	$.widget("ui.imagetool", {
+		/**
+		 * Public methods
+		 */
+		reset: function(options) {
+			$.extend(this.options, options);
+			this._setup();
+		}
+	
+			/**
+			 * Returns all options
+			 */
+		,properties: function() {
+			return this.options;
+		}
+		
 
-	_init: function() {
-		console.log("imagetool init");
+	,_init: function() {
+		var self = this;
+		var o = this.options;
+
+		var image = this.element;
+		image.css("display", "none");
+		if(!o.src) {
+			o.src = image.attr("src");
+		}
+		// Set up the viewport
+		image.wrap("<div/>");
+
+		self._setup();
+	}
+	
+
+	/**
+	 * Loads the image to get width/height
+	 * Called when 
+	 */
+	,_setup: function() {
 		var self = this;
 		var o = this.options;
 		var image = this.element;
-		image.css("display", "none");
+		var i = new Image();
+		i.onload = function() {
+		  o.imageWidth = i.width;
+		  o.imageHeight = i.height;
+		  self._configure();
+		  
+		}
+		i.src = o.src;
+		
+		
 
+		if(o.src != image.attr("src")) {
+			image.attr("src", o.src);
+		}
+	}
 
-		// Set up the viewport        
-		var viewportCss = {
-				backgroundColor: "#fff"
-					,position: "relative"
-						,overflow: "hidden"
-							,width: o.viewportWidth + "px"
-							,height: o.viewportHeight + "px"
-		};
-
-		image.wrap("<div/>");
-
+	,_configure: function() {
+		var self = this;
+		var o = this.options;
+		var image = this.element;
 		var viewport = image.closest("div");
 
-		viewport.css(viewportCss);
-
+		viewport.css({
+			overflow: "hidden"
+			,position: "relative" /* Needed by IE for some reason */
+			,width: o.viewportWidth + "px"
+			,height: o.viewportHeight + "px"
+		});
 		// Set the initial size of the image to the original size.
 		o._width = o.imageWidth;
 		o._height = o.imageHeight;
@@ -44,11 +88,7 @@
 		o._absy = -(o.y * o._height);
 
 		self._zoom();
-
-		image.css({
-			position: "relative"
-				,display: "block"
-		});
+		
 
 		if(o.allowPan || o.allowZoom) {
 			viewport.mousedown(function(e) {self._handleMouseDown(e);});
@@ -61,8 +101,9 @@
 				e.preventDefault();
 			});
 		}
+		image.css({position: "relative", display: "block"});
+		self._trigger("ready", null, o);
 	}
-
 	/**
 	 * Find the edge n, e, s, w, 
 	 */
@@ -92,9 +133,9 @@
 		var self = this;
 		var o = this.options;
 		var image = this.element;
-		var viewport = image.parent();		
+		var viewport = image.parent();
 		viewport.css("cursor", o.cursor);		
-		viewport.mousemove(function(e) {self._handleMouseMove(e);});
+		viewport.mousemove(function() {self._handleMouseMove(event);});
 
 	}
 	/**
@@ -107,14 +148,17 @@
 	}
 
 	,_handleMouseMove: 	function(mmevt) {
+		
 		var self = this;
 		var o = this.options;
 		var image = this.element;
 		var viewport = image.parent();
 
-		var mouseX = (mmevt.pageX - viewport.offset({scroll: false}).left);
-		var mouseY = (mmevt.pageY - viewport.offset({scroll: false}).top);
+		
+		var mouseX = (mmevt.pageX - viewport.offset().left);
+		var mouseY = (mmevt.pageY - viewport.offset().top);
 
+		
 		var edge = self._getEdge(o, mouseX, mouseY);
 		if(edge) {
 			o.cursor = o["cursor-" + edge];
@@ -122,6 +166,7 @@
 		else {
 			o.cursor = o.panCursor;
 		}
+		
 
 		image.css("cursor", o.cursor);
 	}
@@ -137,8 +182,8 @@
 		o.origoX = mousedownEvent.clientX;
 		o.origoY = mousedownEvent.clientY;
 
-		var mouseX = (mousedownEvent.pageX - viewport.offset({scroll: false}).left);
-		var mouseY = (mousedownEvent.pageY - viewport.offset({scroll: false}).top);
+		var mouseX = (mousedownEvent.pageX - viewport.offset().left);
+		var mouseY = (mousedownEvent.pageY - viewport.offset().top);
 
 		var edge = self._getEdge(o, mouseX, mouseY);
 
@@ -239,7 +284,7 @@
 		}
 		self._resize();
 
-		this._trigger("change", e, o);
+		
 	}
 
 	,_resize: function() {
@@ -253,6 +298,7 @@
 		});
 
 		self._fit();
+		this._trigger("change", null, o);
 	}
 
 
@@ -277,7 +323,7 @@
 		o._absy = targetY;
 		self._move();  
 
-		this._trigger("change", e, o);
+		
 	} // end pan
 
 
@@ -310,6 +356,7 @@
 			left: o._absx + "px"
 			,top: o._absy + "px"
 		});
+		this._trigger("change", null, o);
 	}
 
 
@@ -391,7 +438,7 @@
 	}
 });
 
-	$.ui.imagetool.getter = "dimensions";
+	$.ui.imagetool.getter = "properties";
 	$.extend($.ui.imagetool, {
 		version: "@VERSION",
 		defaults: {
@@ -413,16 +460,15 @@
 			,"cursor-s":"s-resize"
 			,"cursor-e":"e-resize"
 			,edgeSensitivity: 15
-			,imageWidth: 200
-			,imageHeight: 200
+			,imageWidth: 200 /* The width of the work image */
+			,imageHeight: 200 /* The height of the work image */
 			,imageMaxWidth: 2500
 			,x: 0
 			,y: 0
 			,w: 1 
 			,h: 1
-			,change: function() {
-				console.log("Image changed");
-	}
+			,ready: function() {}
+			,change: function() {}
 		}
 	});
 })(jQuery);

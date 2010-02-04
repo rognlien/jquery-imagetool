@@ -15,36 +15,31 @@
 			return this.options;
 		}
 		
-	/**
-	 * Private methods
-	 */
-		
+
 	,_init: function() {
 		var self = this;
 		var o = this.options;
 
 		var image = this.element;
-		
 		image.css("display", "none");
-
-
+		if(!o.src) {
+			o.src = image.attr("src");
+		}
 		// Set up the viewport
 		image.wrap("<div/>");
 
 		self._setup();
-
-		image.css({position: "relative", display: "block"});
-		this._trigger("ready", null, o);
 	}
 	
 
+	/**
+	 * Loads the image to get width/height
+	 * Called when 
+	 */
 	,_setup: function() {
 		var self = this;
 		var o = this.options;
 		var image = this.element;
-		if(o.src) {
-			image.attr("src", o.src);
-		}
 		var viewport = image.closest("div");
 
 		viewport.css({
@@ -53,6 +48,39 @@
 			,width: o.viewportWidth + "px"
 			,height: o.viewportHeight + "px"
 		});
+		if(o.allowPan || o.allowZoom) {
+			viewport.mousedown(function(e) {self._handleMouseDown(e);});
+			viewport.mouseover(function(e) {self._handleMouseOver(e);});
+			viewport.mouseout(function(e) {self._handleMouseOut(e);});
+		}
+		else {
+			image.css("cursor", o.disabledCursor);
+			viewport.mousedown(function(e) {
+				e.preventDefault();
+			});
+		}
+		
+		var i = new Image();
+		i.onload = function() {
+		  o.imageWidth = i.width;
+		  o.imageHeight = i.height;
+		  self._configure();
+		  
+		}
+		i.src = o.src;
+		
+		
+
+		if(o.src != image.attr("src")) {
+			image.attr("src", o.src);
+		}
+	}
+
+	,_configure: function() {
+		var self = this;
+		var o = this.options;
+		var image = this.element;
+
 		// Set the initial size of the image to the original size.
 		o._width = o.imageWidth;
 		o._height = o.imageHeight;
@@ -75,19 +103,10 @@
 		self._zoom();
 		
 
-		if(o.allowPan || o.allowZoom) {
-			viewport.mousedown(function(e) {self._handleMouseDown(e);});
-			viewport.mouseover(function(e) {self._handleMouseOver(e);});
-			viewport.mouseout(function(e) {self._handleMouseOut(e);});
-		}
-		else {
-			image.css("cursor", o.disabledCursor);
-			viewport.mousedown(function(e) {
-				e.preventDefault();
-			});
-		}
+
+		image.css({position: "relative", display: "block"});
+		self._trigger("ready", null, o);
 	}
-	
 	/**
 	 * Find the edge n, e, s, w, 
 	 */
@@ -268,7 +287,7 @@
 		}
 		self._resize();
 
-		this._trigger("change", e, o);
+		
 	}
 
 	,_resize: function() {
@@ -282,6 +301,7 @@
 		});
 
 		self._fit();
+		this._trigger("change", null, o);
 	}
 
 
@@ -306,7 +326,7 @@
 		o._absy = targetY;
 		self._move();  
 
-		this._trigger("change", e, o);
+		
 	} // end pan
 
 
@@ -339,6 +359,7 @@
 			left: o._absx + "px"
 			,top: o._absy + "px"
 		});
+		this._trigger("change", null, o);
 	}
 
 
