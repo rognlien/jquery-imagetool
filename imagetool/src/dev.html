@@ -8,16 +8,17 @@
 	<script src="../jquery/jquery-1.4.min.js" type="text/javascript"></script>
 	<script src="../jquery/jquery-ui-1.7.2.custom.min.js" type="text/javascript"></script>
 	<script src="../jquery/jquery.metadata.min.js" type="text/javascript"></script>
+	<script src="../jquery/jquery.mousewheel.js" type="text/javascript"></script>
 	<script src="jquery.ui.imagetool.js" type="text/javascript"></script>
     
     <script type="text/javascript">
       $(function() {
         $("img.a").each(function() {
           var settings = $.extend({}, $(this).metadata(), {
-            allowResizeX: false
-           ,allowResizeY: false
+            allowResizeX: true
+           ,allowResizeY: true
            ,ready: function() {
-            alert("ready");
+            //alert("ready");
           	//$(this).imagetool('reset', {src:'portrait.jpg', imageWidth: 750, imageHeight: 1000, viewportWidth: 600,x: 0, y: 0.33375, w: 1, h: 0.5});
             }
            ,change: function(event, dim) {

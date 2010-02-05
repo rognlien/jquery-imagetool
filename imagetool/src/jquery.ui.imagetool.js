@@ -19,6 +19,7 @@
 	,_init: function() {
 		var self = this;
 		var o = this.options;
+		o._cursor = o.defaultCursor;
 
 		var image = this.element;
 		image.css("display", "none");
@@ -107,20 +108,71 @@
 		image.css({position: "relative", display: "block"});
 		self._trigger("ready", null, o);
 	}
+
+
+	,_handleMouseOver: function(event) {
+		var self = this;
+		var o = this.options;
+		var image = this.element;
+		var viewport = image.parent();
+		viewport.css("cursor", o._cursor);		
+		viewport.mousemove(function(mme) {self._handleMouseMove(mme);});
+		if(typeof $.fn.mousewheel == "function") {
+			viewport.mousewheel(function(mwe,delta) {self._handleMouseWheel(mwe,delta);return false;});
+		}
+		
+
+	}
+	/**
+	 * Sets the right cursor when the mouse moves off the image. 
+	 */
+	,_handleMouseOut: function(e) {
+		var o = this.options;
+		var image = this.element;
+		var viewport = image.parent();
+		image.css("cursor", o._cursor);
+		viewport.unbind("mousewheel").unbind("mousemove");
+	}
+
+	,_handleMouseMove: function(mmevt) {
+		var self = this;
+		var image = this.element;
+		var viewport = image.parent();
+		var o = this.options;
+
+		
+		var mouseX = (mmevt.pageX - viewport.offset().left);
+		var mouseY = (mmevt.pageY - viewport.offset().top);
+		
+		var edge = self._getEdge(mouseX, mouseY);
+		
+		if(edge) {
+			o._cursor = o["cursor-" + edge];
+			edge = null;
+		}
+		else {
+			o._cursor = o.defaultCursor;
+		}
+		
+
+		image.css("cursor", o._cursor);
+	}
+	
 	/**
 	 * Find the edge n, e, s, w, 
 	 */
-	,_getEdge: function(o, x, y) {
+	,_getEdge: function(x, y) {
 		var self = this;
 		var image = this.element;
-
+		var o = this.options;
+		
 		var scale = o._width / o.imageWidth;
 
 
 		var fromEdgdeE = o.viewportWidth - x;
 		var fromEdgdeS = o.viewportHeight - y;
 
-		// TODO: add edge sensitivity to options
+
 		if(fromEdgdeE < o.edgeSensitivity && fromEdgdeS < o.edgeSensitivity && (o.allowResizeX || o.allowResizeY)) {
 			return "se";
 		}
@@ -130,48 +182,9 @@
 		else if(fromEdgdeS < o.edgeSensitivity && o.allowResizeY) {
 			return "s";
 		}
-	}
-
-	,_handleMouseOver: function(event) {
-		var self = this;
-		var o = this.options;
-		var image = this.element;
-		var viewport = image.parent();
-		viewport.css("cursor", o.cursor);		
-		viewport.mousemove(function() {self._handleMouseMove(event);});
-
-	}
-	/**
-	 * Sets the right cursor when the mouse moves off the image. 
-	 */
-	,_handleMouseOut: function(e) {
-		var o = this.options;
-		var image = this.element;
-		image.css("cursor", o.cursor);
-	}
-
-	,_handleMouseMove: 	function(mmevt) {
-		
-		var self = this;
-		var o = this.options;
-		var image = this.element;
-		var viewport = image.parent();
-
-		
-		var mouseX = (mmevt.pageX - viewport.offset().left);
-		var mouseY = (mmevt.pageY - viewport.offset().top);
-
-		
-		var edge = self._getEdge(o, mouseX, mouseY);
-		if(edge) {
-			o.cursor = o["cursor-" + edge];
-		}
 		else {
-			o.cursor = o.panCursor;
+			return null;
 		}
-		
-
-		image.css("cursor", o.cursor);
 	}
 
 	,_handleMouseDown: function(mousedownEvent) {		
@@ -188,7 +201,7 @@
 		var mouseX = (mousedownEvent.pageX - viewport.offset().left);
 		var mouseY = (mousedownEvent.pageY - viewport.offset().top);
 
-		var edge = self._getEdge(o, mouseX, mouseY);
+		var edge = self._getEdge(mouseX, mouseY);
 
 		if(edge) {
 			$(document).mousemove(function(e) {
@@ -196,7 +209,7 @@
 			});
 		}
 		else if(o.allowZoom && (mousedownEvent.shiftKey || mousedownEvent.ctrlKey) ) {
-			o.cursor = o.zoomCursor;
+			o._cursor = o.zoomCursor;
 			image.css("cursor", o.zoomCursor);
 			$("body").css("cursor", o.zoomCursor);
 			$(document).mousemove(function(e) {
@@ -204,21 +217,46 @@
 			});
 		}
 		else if(o.allowPan) {
-			o.cursor = o.panCursor;
-			image.css("cursor", o.panCursor);
-			$("body").css("cursor", o.panCursor);
+			
+			o._cursor = o.panCursor;
+			image.css("cursor", o._cursor);
+			$("body").css("cursor", o._cursor);
+			console.log("Using cursor: " + o._cursor);
 			$(document).mousemove(function(e) {
 				self._handlePan(e);
 			});
 		}
 
 		$(document).mouseup(function() {
-			o.cursor = o.panCursor;
+			o._cursor = o.defaultCursor;
 			$("body").css("cursor", "default");
-			image.css("cursor", o.cursor);
+			image.css("cursor", o._cursor);
 			viewport.unbind("mousemove").unbind("mouseup").unbind("mouseout");
 			$(document).unbind("mousemove");
 		});
+		return false;
+	}
+	
+	,_handleMouseWheel: function(e, delta) {		
+		e.preventDefault();
+		var self = this;
+		var o = this.options;
+		var image = this.element;
+		
+		var factor = o.zoomFactor * (delta < 0 ? -1 : 1);
+
+		console.log("factor: " + factor);
+		if(o.allowZoom) {
+			o._oldWidth = o._width;
+			o._oldHeight = o._height;
+			o._width = ((factor/100) * o._width) + o._oldWidth;
+			o._height = ((factor/100) * o._height) + o._oldHeight;
+
+			if(self._zoom(e)) {
+				this._trigger("change", e, o);
+				o.origoY = e.clientY;
+			}
+		}
 		return false;
 	}
 
@@ -228,6 +266,7 @@
 		var self = this;
 
 		var factor = (o.origoY - e.clientY);
+		console.log("factor: " + factor);
 
 		o._oldWidth = o._width;
 		o._oldHeight = o._height;
@@ -235,7 +274,7 @@
 		o._width = ((factor/100) * o._width) + o._width;
 		o._height = ((factor/100) * o._height) + o._height;
 
-		if(self._zoom()) {
+		if(self._zoom(e)) {
 			this._trigger("change", e, o);
 			o.origoY = e.clientY;
 		}
@@ -370,10 +409,11 @@
 	 * Zooms the image by setting its width/height
 	 * Makes sure the desired size greater or equal to the viewport size. 
 	 */
-	,_zoom: function() {
+	,_zoom: function(e) {
 		var self = this;
 		var image = this.element;
 		var o = this.options;
+		var viewport = image.parent();
 
 		var wasZoomed = true;
 		
@@ -398,21 +438,34 @@
 
 		
 
+
+
+		var originOffetX = 0;
+		var originOffetY = 0;
+		/**
+		 * If an event is sent, we can use this as the origin of the zoom
+		 */
+		if (e && typeof(e) != 'undefined') {
+			// Zoom at the cursor position (like in Google Maps)
+			originOffetX = e.clientX - viewport.offset().left; //Cursor position relative to viewport
+			originOffetY = e.clientY - viewport.offset().top;
+		}
+		else{
+			// Scale at center of viewport
+			originOffetX = o.viewportWidth/2;
+			originOffetY = o.viewportHeight/2;
+		}
+		
+		var cx = o._width /(-o._absx + originOffetX);
+		var cy = o._height /(-o._absy + originOffetY);
+
+		o._absx = o._absx - ((o._width - o._oldWidth) / cx);
+		o._absy = o._absy - ((o._height - o._oldHeight) / cy);
+		
 		image.css({
 			width: o._width + "px"
 			,height: o._height + "px"
 		});
-
-
-		// Scale at center of viewport
-		var cx = o._width /(-o._absx + (o.viewportWidth/2));
-		var cy = o._height /(-o._absy + (o.viewportHeight/2));
-
-
-		o._absx = o._absx - ((o._width - o._oldWidth) / cx);
-		o._absy = o._absy - ((o._height - o._oldHeight) / cy);
-
-		
 		
 		self._move();
 		
@@ -450,8 +503,10 @@
 			,allowPan: true
 			,allowResizeX: true
 			,allowResizeY: true
+			,zoomFactor: 5
+			,defaultCursor: "url(openhand.cur), move"
 			,zoomCursor: "crosshair"
-			,panCursor: "move"
+			,panCursor: "url(closedhand.cur), move"
 			,disabledCursor: "not-allowed"
 			,viewportWidth: 400
 			,viewportHeight: 300
