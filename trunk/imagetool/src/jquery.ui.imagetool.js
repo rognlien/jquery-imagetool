@@ -221,7 +221,6 @@
 			o._cursor = o.panCursor;
 			image.css("cursor", o._cursor);
 			$("body").css("cursor", o._cursor);
-			console.log("Using cursor: " + o._cursor);
 			$(document).mousemove(function(e) {
 				self._handlePan(e);
 			});
@@ -245,7 +244,6 @@
 		
 		var factor = o.zoomFactor * (delta < 0 ? -1 : 1);
 
-		console.log("factor: " + factor);
 		if(o.allowZoom) {
 			o._oldWidth = o._width;
 			o._oldHeight = o._height;
@@ -266,7 +264,6 @@
 		var self = this;
 
 		var factor = (o.origoY - e.clientY);
-		console.log("factor: " + factor);
 
 		o._oldWidth = o._width;
 		o._oldHeight = o._height;

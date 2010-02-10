@@ -17,10 +17,7 @@
           var settings = $.extend({}, $(this).metadata(), {
             allowResizeX: true
            ,allowResizeY: true
-           ,ready: function() {
-            //alert("ready");
-          	//$(this).imagetool('reset', {src:'portrait.jpg', imageWidth: 750, imageHeight: 1000, viewportWidth: 600,x: 0, y: 0.33375, w: 1, h: 0.5});
-            }
+           ,ready: function() {}
            ,change: function(event, dim) {
              $("input[name=dimensions]").val("x: " + dim.x + ", y: " + dim.y + ", w: " + dim.w + ", h: " + dim.h);
             }
@@ -60,7 +57,9 @@
     </script>
   </head>
   <body>
-  	<img class="a {src: 'grid.png',imageWidth: 1000,imageHeight: 1000,viewportWidth: 400,viewportHeight: 400,x: 0.4004292783338513,y: 0.3006338195590597,w: 0.498977293873958,h: 0.3742329704054685}" src="image.jpg" />
+  	<img class="a {src: 'grid.png',viewportWidth: 400,viewportHeight: 400,x: 0.4004292783338513,y: 0.3006338195590597,w: 0.498977293873958,h: 0.3742329704054685}" src="image.jpg" />
+    
+    http://nrkmci27767.intern.nrk.no:9999/service/api/1.0/data/3krdluCIV1-BBhdqZGS11g-0Vcj3pzo0eca3tNt2B5xg
     
     <input type="button" name="reset" value="Reset"/>
     <input type="button" name="data" value="Data"/>
